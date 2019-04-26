@@ -153,4 +153,17 @@ namespace spk
         else memoryPartitionsCount[index]--;
     }
 
+    MemoryManager::~MemoryManager()
+    {
+        index_t i = 0;
+        for(auto& memory : memoryArray)
+        {
+            while(memory.operator VkDeviceMemory() != VK_NULL_HANDLE)
+            {
+                freeMemory(i);
+            }
+            ++i;
+        }
+    }
+
 }

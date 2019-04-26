@@ -38,6 +38,7 @@ namespace spk
         void freeMemory(const index_t index);                                                           // if memory was lazily allocated, nothing will be freed until all of the parts are asked to be freed
         void flushLazyAllocations();                                                                    // allocates all pending lazy allocations
         void flushLazyAllocationsByFlags(const vk::MemoryPropertyFlags flags);                          // allocates pending lazy allocations with specific flags
+        ~MemoryManager();
     private:
         struct PendingAllocationData
         {
