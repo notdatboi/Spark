@@ -23,11 +23,11 @@ namespace spk
         return instance;
     }
 
-    uint32_t MemoryManager::findMemoryTypeIndex(vk::MemoryPropertyFlags flags) const
+    uint32_t MemoryManager::findMemoryTypeIndex(vk::MemoryPropertyFlags flags, uint32_t memoryTypeBits) const
     {
         for(int i = 0; i < memoryProperties.memoryTypeCount; ++i)
         {
-            if((memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) return i;
+            if((((memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) && ((1 << i) & memoryTypeBits))) return i;
         }
         throw std::runtime_error("Failed to find requested memory propery flags!\n");
     }
@@ -56,7 +56,7 @@ namespace spk
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         vk::MemoryAllocateInfo vkInfo;
         vkInfo.setAllocationSize(info.size);
-        vkInfo.setMemoryTypeIndex(findMemoryTypeIndex(info.flags));
+        vkInfo.setMemoryTypeIndex(findMemoryTypeIndex(info.flags, info.memoryTypeBits));
         if(logicalDevice.allocateMemory(&vkInfo, nullptr, &memoryArray[index]) != vk::Result::eSuccess)
         {
             throw std::runtime_error("Failed to allocate memory!\n");
