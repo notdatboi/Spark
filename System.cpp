@@ -115,14 +115,9 @@ namespace spk
         vk::InstanceCreateInfo instanceInfo;
         instanceInfo.setEnabledExtensionCount(instanceExtensions.size());
         instanceInfo.setPpEnabledExtensionNames(instanceExtensions.data());
-    #ifdef DEBUG
-            std::vector<const char*> instanceLayers = getInstanceLayers();
-            instanceInfo.setEnabledLayerCount(instanceLayers.size());
-            instanceInfo.setPpEnabledLayerNames(instanceLayers.data());
-    #else
-            instanceInfo.setEnabledLayerCount(0);
-            instanceInfo.setPpEnabledLayerNames(nullptr);
-    #endif
+        std::vector<const char*> instanceLayers = getInstanceLayers();
+        instanceInfo.setEnabledLayerCount(instanceLayers.size());
+        instanceInfo.setPpEnabledLayerNames(instanceLayers.data());
         vk::ApplicationInfo appInfo;
         appInfo.setApiVersion(VK_MAKE_VERSION(1, 0, 0));
         appInfo.setApplicationVersion(VK_MAKE_VERSION(0, 0, 1));
