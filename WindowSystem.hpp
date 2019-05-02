@@ -1,7 +1,7 @@
-#ifndef TEST_WINDOW_SYSTEM_HPP
-#define TEST_WINDOW_SYSTEM_HPP
+#ifndef SPARK_WINDOW_SYSTEM_HPP
+#define SPARK_WINDOW_SYSTEM_HPP
 
-#include"Image.hpp"
+//#include {RenderTargetName.hpp}
 
 namespace spk
 {
