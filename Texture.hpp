@@ -38,6 +38,7 @@ namespace spk
         ImageData imageData;
         AllocatedMemoryData memoryData;
         vk::Image image;
+        vk::ImageView view;
         vk::Fence textureReadyFence;
         const void * rawImageData;
 

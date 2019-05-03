@@ -68,6 +68,21 @@ namespace spk
         allocationInfo.memoryTypeBits = memoryRequirements.memoryTypeBits;
         allocationInfo.size = memoryRequirements.size;
         memoryData = MemoryManager::getInstance()->allocateMemoryLazy(allocationInfo);
+
+        vk::ImageSubresourceRange range;
+        range.setAspectMask(vk::ImageAspectFlagBits::eColor);
+        range.setLayerCount(1);
+        range.setBaseArrayLayer(0);
+        range.setLevelCount(1);
+        range.setBaseMipLevel(0);
+
+        vk::ImageViewCreateInfo viewInfo;
+        viewInfo.setImage(image);
+        viewInfo.setViewType(vk::ImageViewType::e2D);
+        viewInfo.setFormat(imageData.format);
+        viewInfo.setComponents(vk::ComponentMapping());
+        viewInfo.setSubresourceRange(range);
+        if(logicalDevice.createImageView(&viewInfo, nullptr, &view) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image view!\n");
         
         vk::FenceCreateInfo fenceInfo;
         logicalDevice.createFence(&fenceInfo, nullptr, &textureReadyFence);
