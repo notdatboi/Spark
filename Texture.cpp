@@ -148,6 +148,10 @@ namespace spk
         submitInfo.setPWaitDstStageMask(&dstStageFlags);
 
         graphicsQueue.submit(1, &submitInfo, textureReadyFence);
+
+        logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);
+        MemoryManager::getInstance()->freeMemory(bufferData.index);
+        logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
     }
 
     Texture::~Texture()
