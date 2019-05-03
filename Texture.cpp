@@ -134,6 +134,32 @@ namespace spk
         copyInfo.setImageSubresource(subresource);
         memoryBindBuffer.copyBufferToImage(transmissionBuffer, image, imageData.layout, 1, &copyInfo);
 
+        /* EXPERIMENTAL */
+
+        vk::ImageSubresourceRange subresourceRange;
+        subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor);
+        subresourceRange.setLayerCount(1);
+        subresourceRange.setBaseArrayLayer(0);
+        subresourceRange.setLevelCount(1);
+        subresourceRange.setBaseMipLevel(0);
+
+        vk::ImageMemoryBarrier imageBarrier;
+        imageBarrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
+        imageBarrier.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead);
+        imageBarrier.setImage(image);
+        imageBarrier.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+        imageBarrier.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+        imageBarrier.setOldLayout(imageData.layout);
+        imageBarrier.setNewLayout(vk::ImageLayout::eColorAttachmentOptimal);
+        imageData.layout = vk::ImageLayout::eColorAttachmentOptimal;
+        imageBarrier.setSubresourceRange(subresourceRange);
+        memoryBindBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eVertexShader, vk::DependencyFlags(), 
+            0, nullptr,
+            0, nullptr,
+            1, &imageBarrier);
+        
+        /* */
+
         memoryBindBuffer.end();
 
         const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
