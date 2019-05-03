@@ -30,8 +30,8 @@ namespace spk
     class Texture
     {
         Texture(const uint32_t width, const uint32_t height, const void * rawData);
-        const vk::Image& getImage() const;
-        vk::Image& getImage();
+        const vk::ImageView& getImageView() const;
+        vk::ImageView& getImageView();
         void bindMemory(const vk::CommandBuffer& memoryBindBuffer);
         ~Texture();
     private:

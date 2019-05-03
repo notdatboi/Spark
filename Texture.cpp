@@ -88,14 +88,14 @@ namespace spk
         logicalDevice.createFence(&fenceInfo, nullptr, &textureReadyFence);
     }
 
-    const vk::Image& Texture::getImage() const 
+    const vk::ImageView& Texture::getImageView() const 
     {
-        return image;
+        return view;
     }
 
-    vk::Image& Texture::getImage()
+    vk::ImageView& Texture::getImageView()
     {
-        return image;
+        return view;
     }
 
     void Texture::bindMemory(const vk::CommandBuffer& memoryBindBuffer)
@@ -121,13 +121,13 @@ namespace spk
         allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
         allocInfo.size = transmissionBufferMemoryRequirements.size;
         AllocatedMemoryData bufferData = MemoryManager::getInstance()->allocateMemory(allocInfo);
-        vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(bufferData.index);
+        vk::DeviceMemory& bufferMemory = MemoryManager::getInstance()->getMemory(bufferData.index);
 
         void * mappedMemory;
-        if(logicalDevice.mapMemory(memory, bufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
+        if(logicalDevice.mapMemory(bufferMemory, bufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
         memcpy(mappedMemory, rawImageData, transmissionBufferInfo.size);
-        logicalDevice.unmapMemory(memory);
-        if(logicalDevice.bindBufferMemory(transmissionBuffer, memory, bufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
+        logicalDevice.unmapMemory(bufferMemory);
+        if(logicalDevice.bindBufferMemory(transmissionBuffer, bufferMemory, bufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
 
         vk::CommandBufferBeginInfo commandBufferInfo;
         commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);

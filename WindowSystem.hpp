@@ -2,6 +2,8 @@
 #define SPARK_WINDOW_SYSTEM_HPP
 
 //#include {RenderTargetName.hpp}
+#include<vulkan/vulkan.hpp>
+#include<GLFW/glfw3.h>
 
 namespace spk
 {
