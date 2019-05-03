@@ -198,6 +198,10 @@ namespace spk
     Texture::~Texture()
     {
         MemoryManager::getInstance()->freeMemory(memoryData.index);
+        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        logicalDevice.destroyFence(textureReadyFence, nullptr);
+        logicalDevice.destroyImage(image, nullptr);
+        logicalDevice.destroyImageView(view, nullptr);
     }
 
 }
