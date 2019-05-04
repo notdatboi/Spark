@@ -19,8 +19,13 @@ namespace spk
         }
         surface = tmpSurface;
     }
+    
+    vk::SurfaceKHR& WindowSystem::getSurface()
+    {
+        return surface;
+    }
 
-    WindowSystem::operator vk::SurfaceKHR() const
+    const vk::SurfaceKHR& WindowSystem::getSurface() const
     {
         return surface;
     }

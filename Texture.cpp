@@ -60,7 +60,7 @@ namespace spk
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         vk::ImageCreateInfo info = imageData;
-        logicalDevice.createImage(&info, nullptr, &image);
+        if(logicalDevice.createImage(&info, nullptr, &image) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image!\n");
         vk::MemoryRequirements memoryRequirements;
         logicalDevice.getImageMemoryRequirements(image, &memoryRequirements);
         MemoryAllocationInfo allocationInfo;
@@ -85,7 +85,10 @@ namespace spk
         if(logicalDevice.createImageView(&viewInfo, nullptr, &view) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image view!\n");
         
         vk::FenceCreateInfo fenceInfo;
-        logicalDevice.createFence(&fenceInfo, nullptr, &textureReadyFence);
+        if(logicalDevice.createFence(&fenceInfo, nullptr, &textureReadyFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
+
+        vk::SemaphoreCreateInfo semaphoreInfo;
+        if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &textureReadySemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
     }
 
     const vk::ImageView& Texture::getImageView() const 
@@ -102,7 +105,7 @@ namespace spk
     {
         const vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(memoryData.index);
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        logicalDevice.bindImageMemory(image, memory, memoryData.offset);
+        if(logicalDevice.bindImageMemory(image, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory to the texture!\n");
 
         vk::Buffer transmissionBuffer;
         vk::BufferCreateInfo transmissionBufferInfo;
@@ -112,7 +115,7 @@ namespace spk
         transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
         transmissionBufferInfo.setSize(imageData.extent.width * imageData.extent.height);
         transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);             // add transferDst?
-        logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer);
+        if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
 
         vk::MemoryRequirements transmissionBufferMemoryRequirements;
         logicalDevice.getBufferMemoryRequirements(transmissionBuffer, &transmissionBufferMemoryRequirements);
@@ -132,7 +135,7 @@ namespace spk
         vk::CommandBufferBeginInfo commandBufferInfo;
         commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-        memoryBindBuffer.begin(&commandBufferInfo);
+        if(memoryBindBuffer.begin(&commandBufferInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
 
         vk::ImageSubresourceLayers subresource;
         subresource.setAspectMask(vk::ImageAspectFlagBits::eColor);
@@ -181,8 +184,8 @@ namespace spk
         vk::SubmitInfo submitInfo;
         submitInfo.setCommandBufferCount(1);
         submitInfo.setPCommandBuffers(&memoryBindBuffer);
-        submitInfo.setSignalSemaphoreCount(0);                  // recheck later
-        submitInfo.setPSignalSemaphores(nullptr);               // too
+        submitInfo.setSignalSemaphoreCount(1);                  // recheck later
+        submitInfo.setPSignalSemaphores(&textureReadySemaphore);               // too
         submitInfo.setWaitSemaphoreCount(0);                    // too
         submitInfo.setPWaitSemaphores(nullptr);                 // too
         vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eTopOfPipe;

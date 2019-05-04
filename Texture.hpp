@@ -40,6 +40,7 @@ namespace spk
         vk::Image image;
         vk::ImageView view;
         vk::Fence textureReadyFence;
+        vk::Semaphore textureReadySemaphore;
         const void * rawImageData;
 
         void create();

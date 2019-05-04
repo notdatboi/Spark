@@ -12,7 +12,8 @@ namespace spk
     {
     public:
         static WindowSystem* getInstance();
-        operator vk::SurfaceKHR() const;
+        vk::SurfaceKHR& getSurface();
+        const vk::SurfaceKHR& getSurface() const;
         ~WindowSystem();
     private:
         WindowSystem();
