@@ -14,6 +14,7 @@ namespace spk
         static WindowSystem* getInstance();
         vk::SurfaceKHR& getSurface();
         const vk::SurfaceKHR& getSurface() const;
+        GLFWwindow* getWindow();
         ~WindowSystem();
     private:
         WindowSystem();

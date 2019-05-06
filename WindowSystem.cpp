@@ -9,7 +9,7 @@ namespace spk
     WindowSystem::WindowSystem()
     {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        window = glfwCreateWindow(800, 600, "AAA", nullptr, nullptr);
+        window = glfwCreateWindow(800, 600, "TEST", nullptr, nullptr);
 
         vk::Instance& instance = System::getInstance()->getvkInstance();
         VkSurfaceKHR tmpSurface;
@@ -40,6 +40,11 @@ namespace spk
             created = true;
         }
         return windowSystemInstance;
+    }
+
+    GLFWwindow* WindowSystem::getWindow()
+    {
+        return window;
     }
 
     WindowSystem::~WindowSystem()

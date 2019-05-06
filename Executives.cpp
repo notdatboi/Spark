@@ -22,7 +22,7 @@ namespace spk
         {
             if(!presentSupport)
             {
-                if(physicalDevice.getSurfaceSupportKHR(i, *WindowSystem::getInstance(), &presentSupport) != vk::Result::eSuccess)
+                if(physicalDevice.getSurfaceSupportKHR(i, WindowSystem::getInstance()->getSurface(), &presentSupport) != vk::Result::eSuccess)
                 {
                     throw std::runtime_error("Failed to get surface support!\n");
                 }

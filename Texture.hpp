@@ -25,11 +25,15 @@ namespace spk
         uint32_t queueFamilyIndexCount;
         std::vector<uint32_t> queueFamilyIndices;
         vk::ImageLayout layout;
+        uint32_t channelCount;
     };
 
     class Texture
     {
+    public:
+        Texture();
         Texture(const uint32_t width, const uint32_t height, const void * rawData);
+        void create(const uint32_t width, const uint32_t height, const void * rawData);
         const vk::ImageView& getImageView() const;
         vk::ImageView& getImageView();
         void bindMemory(const vk::CommandBuffer& memoryBindBuffer);
@@ -43,7 +47,7 @@ namespace spk
         vk::Semaphore textureReadySemaphore;
         const void * rawImageData;
 
-        void create();
+        void init();
     };
 
 }
