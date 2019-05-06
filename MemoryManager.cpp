@@ -143,7 +143,7 @@ namespace spk
 
     void MemoryManager::freeMemory(const index_t index)
     {
-        if(memoryPartitionsCount[index] <= 0) throw std::runtime_error("Trying to free freed memory!\n");
+        if(memoryPartitionsCount[index] <= 0) return;
         if(memoryPartitionsCount[index] == 1)
         {
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
@@ -158,7 +158,7 @@ namespace spk
         index_t i = 0;
         for(auto& memory : memoryArray)
         {
-            while(memory.operator VkDeviceMemory() != VK_NULL_HANDLE)
+            while(freedIndices.find(i) == freedIndices.end())
             {
                 freeMemory(i);
             }
