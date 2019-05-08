@@ -16,6 +16,7 @@ namespace spk
         void create(const size_t cSize/*, const bool cDeviceLocal = false*/);
         const vk::Buffer& getBuffer() const;
         vk::Buffer& getBuffer();
+        const vk::Fence& getReadyFence() const;
         //void update(const vk::CommandBuffer& memoryBindBuffer, const void* data);
         void update(const void* data);
         const vk::DeviceSize getOffset() const;

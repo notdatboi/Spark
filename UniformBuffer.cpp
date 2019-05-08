@@ -19,6 +19,11 @@ namespace spk
         return buffer;
     }
 
+    const vk::Fence& UniformBuffer::getReadyFence() const
+    {
+        return bufferReadyFence;
+    }
+
     UniformBuffer::UniformBuffer(const size_t cSize/*, const bool cDeviceLocal*/)
     {
         create(cSize/*, cDeviceLocal*/);
@@ -81,6 +86,8 @@ namespace spk
         const vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(memoryData.index);
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
+
+        if(logicalDevice.resetFences(1, &bufferReadyFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset fence!\n");
 
         if(!memoryBound)
         {
