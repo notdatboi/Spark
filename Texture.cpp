@@ -50,17 +50,32 @@ namespace spk
         return info;
     }
 
-    Texture::Texture(){}
-
-    Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData)
+    Texture& Texture::operator=(Texture&& rTexture)
     {
-        create(width, height, rawData);
+        rTexture.transferred = true;
+        imageData = rTexture.imageData;
+        memoryData = rTexture.memoryData;
+        image = rTexture.image;
+        view = rTexture.view;
+        textureReadyFence = rTexture.textureReadyFence;
+        textureReadySemaphore = rTexture.textureReadySemaphore;
+        rawImageData = rTexture.rawImageData;
+        binding = rTexture.binding;
+        return *this;
     }
 
-    void Texture::create(const uint32_t width, const uint32_t height, const void * rawData)
+    Texture::Texture(){}
+
+    Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cBinding)
+    {
+        create(width, height, rawData, binding);
+    }
+
+    void Texture::create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cBinding)
     {
         imageData.extent = vk::Extent3D(width, height, 1);
         rawImageData = rawData;
+        binding = cBinding;
         init();
     }
 
@@ -130,8 +145,6 @@ namespace spk
 
         if(memoryBindBuffer.begin(&commandBufferInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
 
-        /* EXPERIMENTAL */
-
         vk::ImageSubresourceRange subresourceRange;
         subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor);
         subresourceRange.setLayerCount(1);
@@ -153,8 +166,6 @@ namespace spk
             0, nullptr,
             0, nullptr,
             1, &imageInitialBarrier);
-        
-        /* */
 
         vk::ImageSubresourceLayers subresource;
         subresource.setAspectMask(vk::ImageAspectFlagBits::eColor);
@@ -172,8 +183,6 @@ namespace spk
         copyInfo.setImageSubresource(subresource);
         memoryBindBuffer.copyBufferToImage(transmissionBuffer, image, imageData.layout, 1, &copyInfo);
 
-        /* EXPERIMENTAL */
-
         vk::ImageMemoryBarrier imageBarrier;
         imageBarrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
         imageBarrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
@@ -189,8 +198,6 @@ namespace spk
             0, nullptr,
             1, &imageBarrier);
         
-        /* */
-
         memoryBindBuffer.end();
 
         const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
@@ -206,7 +213,7 @@ namespace spk
 
         graphicsQueue.submit(1, &submitInfo, textureReadyFence);
 
-        logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);
+        logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here
         if(memoryBindBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
         MemoryManager::getInstance()->freeMemory(bufferData.index);
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
@@ -229,11 +236,15 @@ namespace spk
 
     Texture::~Texture()
     {
-        MemoryManager::getInstance()->freeMemory(memoryData.index);
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        logicalDevice.destroyFence(textureReadyFence, nullptr);
-        logicalDevice.destroyImage(image, nullptr);
-        logicalDevice.destroyImageView(view, nullptr);
+        if(!transferred)
+        {
+            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+            if(logicalDevice.getFenceStatus(textureReadyFence) != vk::Result::eSuccess) throw std::runtime_error("You should not use the texture without binding it to the resource set (because of possible memory leaks).\n");
+            MemoryManager::getInstance()->freeMemory(memoryData.index);
+            logicalDevice.destroyFence(textureReadyFence, nullptr);
+            logicalDevice.destroyImage(image, nullptr);
+            logicalDevice.destroyImageView(view, nullptr);
+        }
     }
 
 }
