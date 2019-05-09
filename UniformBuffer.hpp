@@ -16,7 +16,7 @@ namespace spk
         void create(const size_t cSize/*, const bool cDeviceLocal = false*/, uint32_t cSetIndex, uint32_t cBinding);
         const vk::Buffer& getBuffer() const;
         vk::Buffer& getBuffer();
-        const vk::Fence& getReadyFence() const;
+        const vk::Event& getReadyEvent() const;
         //void update(const vk::CommandBuffer& memoryBindBuffer, const void* data);
         void update(const void* data);
         const vk::DeviceSize getOffset() const;
@@ -29,7 +29,7 @@ namespace spk
         size_t size;
         AllocatedMemoryData memoryData;
         //bool deviceLocal;
-        vk::Fence bufferReadyFence;
+        vk::Event bufferReadyEvent;
         uint32_t setIndex;
         uint32_t binding;
         bool transferred = false;

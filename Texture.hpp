@@ -37,6 +37,7 @@ namespace spk
         const vk::ImageView& getImageView() const;
         vk::ImageView& getImageView();
         void bindMemory(const vk::CommandBuffer& memoryBindBuffer);
+        const vk::Fence& getReadyFence() const;
         Texture& operator=(const Texture& rTexture) = delete;
         Texture& operator=(Texture& rTexture) = delete;
         Texture& operator=(Texture&& rTexture);

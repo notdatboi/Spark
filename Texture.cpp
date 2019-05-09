@@ -214,7 +214,7 @@ namespace spk
 
         graphicsQueue.submit(1, &submitInfo, textureReadyFence);
 
-        logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here
+        logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here (if it is needed)
         if(memoryBindBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
         MemoryManager::getInstance()->freeMemory(bufferData.index);
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);

@@ -19,9 +19,9 @@ namespace spk
         return buffer;
     }
 
-    const vk::Fence& UniformBuffer::getReadyFence() const
+    const vk::Event& UniformBuffer::getReadyEvent() const
     {
-        return bufferReadyFence;
+        return bufferReadyEvent;
     }
 
     UniformBuffer::UniformBuffer(const size_t cSize/*, const bool cDeviceLocal*/, uint32_t cSetIndex, uint32_t cBinding)
@@ -35,7 +35,7 @@ namespace spk
         buffer = std::move(rBuffer.buffer);
         size = std::move(rBuffer.size);
         memoryData = std::move(rBuffer.memoryData);
-        bufferReadyFence = std::move(rBuffer.bufferReadyFence);
+        bufferReadyEvent = std::move(rBuffer.bufferReadyEvent);
         setIndex = std::move(rBuffer.setIndex);
         binding = std::move(rBuffer.binding);
         return *this;
@@ -70,8 +70,8 @@ namespace spk
         else */allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;        // TODO: change host coherency
         memoryData = MemoryManager::getInstance()->allocateMemoryLazy(allocInfo);
 
-        vk::FenceCreateInfo fenceInfo;
-        if(logicalDevice.createFence(&fenceInfo, nullptr, &bufferReadyFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
+        vk::EventCreateInfo eventInfo;
+        if(logicalDevice.createEvent(&eventInfo, nullptr, &bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
     }
 
     void UniformBuffer::update(const void* data)
@@ -80,6 +80,7 @@ namespace spk
         static bool memoryBound = false;
         const vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(memoryData.index);
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        logicalDevice.resetEvent(bufferReadyEvent);
 
         if(!memoryBound)
         {
@@ -91,6 +92,7 @@ namespace spk
         if(logicalDevice.mapMemory(memory, memoryData.offset, size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
         memcpy(mappedMemory, data, size);
         logicalDevice.unmapMemory(memory);
+        logicalDevice.setEvent(bufferReadyEvent);
     }
 
     /*void UniformBuffer::update(const vk::CommandBuffer& memoryBindBuffer, const void* data)
@@ -182,7 +184,7 @@ namespace spk
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
             logicalDevice.destroyBuffer(buffer, nullptr);
             MemoryManager::getInstance()->freeMemory(memoryData.index);
-            logicalDevice.destroyFence(bufferReadyFence, nullptr);
+            logicalDevice.destroyEvent(bufferReadyEvent, nullptr);
         }
     }
 }
