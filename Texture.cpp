@@ -239,7 +239,6 @@ namespace spk
         if(!transferred)
         {
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-            if(logicalDevice.getFenceStatus(textureReadyFence) != vk::Result::eSuccess) throw std::runtime_error("You should not use the texture without binding it to the resource set (because of possible memory leaks).\n");
             MemoryManager::getInstance()->freeMemory(memoryData.index);
             logicalDevice.destroyFence(textureReadyFence, nullptr);
             logicalDevice.destroyImage(image, nullptr);
