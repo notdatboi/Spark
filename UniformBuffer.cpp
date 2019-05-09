@@ -29,6 +29,18 @@ namespace spk
         create(cSize/*, cDeviceLocal*/, cSetIndex, binding);
     }
 
+    UniformBuffer& UniformBuffer::operator=(UniformBuffer&& rBuffer)
+    {
+        rBuffer.transferred = true;
+        buffer = std::move(rBuffer.buffer);
+        size = std::move(rBuffer.size);
+        memoryData = std::move(rBuffer.memoryData);
+        bufferReadyFence = std::move(rBuffer.bufferReadyFence);
+        setIndex = std::move(rBuffer.setIndex);
+        binding = std::move(rBuffer.binding);
+        return *this;
+    }
+
     void UniformBuffer::create(const size_t cSize/*, const bool cDeviceLocal*/, uint32_t cSetIndex, uint32_t cBinding)
     {
         setIndex = cSetIndex;
@@ -165,9 +177,12 @@ namespace spk
 
     UniformBuffer::~UniformBuffer()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        logicalDevice.destroyBuffer(buffer, nullptr);
-        MemoryManager::getInstance()->freeMemory(memoryData.index);
-        logicalDevice.destroyFence(bufferReadyFence, nullptr);
+        if(!transferred)
+        {
+            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+            logicalDevice.destroyBuffer(buffer, nullptr);
+            MemoryManager::getInstance()->freeMemory(memoryData.index);
+            logicalDevice.destroyFence(bufferReadyFence, nullptr);
+        }
     }
 }

@@ -20,6 +20,9 @@ namespace spk
         //void update(const vk::CommandBuffer& memoryBindBuffer, const void* data);
         void update(const void* data);
         const vk::DeviceSize getOffset() const;
+        UniformBuffer& operator=(const UniformBuffer& rBuffer) = delete;
+        UniformBuffer& operator=(UniformBuffer& rBuffer) = delete;
+        UniformBuffer& operator=(UniformBuffer&& rBuffer);
         ~UniformBuffer();
     private:
         vk::Buffer buffer;
@@ -29,6 +32,7 @@ namespace spk
         vk::Fence bufferReadyFence;
         uint32_t setIndex;
         uint32_t binding;
+        bool transferred = false;
     };
 
 }
