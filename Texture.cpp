@@ -53,14 +53,14 @@ namespace spk
     Texture& Texture::operator=(Texture&& rTexture)
     {
         rTexture.transferred = true;
-        imageData = rTexture.imageData;
-        memoryData = rTexture.memoryData;
-        image = rTexture.image;
-        view = rTexture.view;
-        textureReadyFence = rTexture.textureReadyFence;
-        textureReadySemaphore = rTexture.textureReadySemaphore;
-        rawImageData = rTexture.rawImageData;
-        binding = rTexture.binding;
+        imageData = std::move(rTexture.imageData);
+        memoryData = std::move(rTexture.memoryData);
+        image = std::move(rTexture.image);
+        view = std::move(rTexture.view);
+        textureReadyFence = std::move(rTexture.textureReadyFence);
+        textureReadySemaphore = std::move(rTexture.textureReadySemaphore);
+        rawImageData = std::move(rTexture.rawImageData);
+        binding = std::move(rTexture.binding);
         return *this;
     }
 
