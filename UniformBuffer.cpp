@@ -24,13 +24,15 @@ namespace spk
         return bufferReadyFence;
     }
 
-    UniformBuffer::UniformBuffer(const size_t cSize/*, const bool cDeviceLocal*/)
+    UniformBuffer::UniformBuffer(const size_t cSize/*, const bool cDeviceLocal*/, uint32_t cSetIndex, uint32_t cBinding)
     {
-        create(cSize/*, cDeviceLocal*/);
+        create(cSize/*, cDeviceLocal*/, cSetIndex, binding);
     }
 
-    void UniformBuffer::create(const size_t cSize/*, const bool cDeviceLocal*/)
+    void UniformBuffer::create(const size_t cSize/*, const bool cDeviceLocal*/, uint32_t cSetIndex, uint32_t cBinding)
     {
+        setIndex = cSetIndex;
+        binding = cBinding;
     //    rawBufferData = rawData;
         //deviceLocal = cDeviceLocal;
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();

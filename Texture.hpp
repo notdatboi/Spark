@@ -32,8 +32,8 @@ namespace spk
     {
     public:
         Texture();
-        Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cBinding);
-        void create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cBinding);
+        Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding);
+        void create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding);
         const vk::ImageView& getImageView() const;
         vk::ImageView& getImageView();
         void bindMemory(const vk::CommandBuffer& memoryBindBuffer);
@@ -50,6 +50,7 @@ namespace spk
         vk::Semaphore textureReadySemaphore;
         const void * rawImageData;
         uint32_t binding;
+        uint32_t setIndex;
         bool transferred = false;
 
         void init();

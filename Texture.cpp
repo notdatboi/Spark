@@ -66,15 +66,16 @@ namespace spk
 
     Texture::Texture(){}
 
-    Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cBinding)
+    Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
     {
-        create(width, height, rawData, binding);
+        create(width, height, rawData, cSetIndex, cBinding);
     }
 
-    void Texture::create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cBinding)
+    void Texture::create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
     {
         imageData.extent = vk::Extent3D(width, height, 1);
         rawImageData = rawData;
+        setIndex = cSetIndex;
         binding = cBinding;
         init();
     }
