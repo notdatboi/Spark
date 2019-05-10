@@ -19,14 +19,19 @@ namespace spk
         const vk::Queue& getPresentQueue() const;
         vk::Queue& getGraphicsQueue();
         vk::Queue& getPresentQueue();
+        const vk::CommandPool& getPool() const;
+        vk::CommandPool& getPool();
+        ~Executives();
     private:
         Executives();
+        void createPool();
 
         static Executives* executivesInstance;
         uint32_t graphicsQueueFamilyIndex;
         uint32_t presentQueueFamilyIndex;
         vk::Queue graphicsQueue;
         vk::Queue presentQueue;
+        vk::CommandPool pool;
     };
 
 }

@@ -35,14 +35,13 @@ namespace spk
             }
             ++i;
         }
-    //   std::cout << '!' << presentSupport << '!' << graphicsSupport << '!';
         if(!(graphicsSupport && presentSupport)) throw std::runtime_error("Failed to pick graphics or present queue!\n");
     }
 
     Executives* Executives::getInstance()
     {
         static bool created = false;
-        static bool queuesObtained = false; // is called from system::getInstance once and then from system::createLogicalDevice twice before needed
+        static bool queuesObtained = false;
         if(!created)
         {
             std::cout << "Creating executives\n";
@@ -52,7 +51,7 @@ namespace spk
         }
         if(!queuesObtained)
         {
-            vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
             if(logicalDevice.operator VkDevice() == VK_NULL_HANDLE)
             {
                 return executivesInstance;
@@ -60,6 +59,7 @@ namespace spk
             queuesObtained = true;
             logicalDevice.getQueue(executivesInstance->graphicsQueueFamilyIndex, 0, &executivesInstance->graphicsQueue);
             logicalDevice.getQueue(executivesInstance->presentQueueFamilyIndex, 0, &executivesInstance->presentQueue);
+            executivesInstance->createPool();
         }
         return executivesInstance;
     }
@@ -92,6 +92,34 @@ namespace spk
     vk::Queue& Executives::getPresentQueue()
     {
         return presentQueue;
+    }
+
+    const vk::CommandPool& Executives::getPool() const
+    {
+        return pool;
+    }
+
+    vk::CommandPool& Executives::getPool()
+    {
+        return pool;
+    }
+
+    void Executives::createPool()
+    {
+        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        vk::CommandPoolCreateInfo poolInfo;
+        poolInfo.setQueueFamilyIndex(graphicsQueueFamilyIndex);
+        poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+        logicalDevice.createCommandPool(&poolInfo, nullptr, &pool);
+    }
+
+    Executives::~Executives()
+    {
+        if(pool.operator VkCommandPool() != VK_NULL_HANDLE)
+        {
+            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+            logicalDevice.destroyCommandPool(pool, nullptr);
+        }
     }
 
 }
