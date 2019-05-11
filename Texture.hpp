@@ -41,6 +41,8 @@ namespace spk
         Texture& operator=(const Texture& rTexture) = delete;
         Texture& operator=(Texture& rTexture) = delete;
         Texture& operator=(Texture&& rTexture);
+        const uint32_t getSet() const;
+        const uint32_t getBinding() const;
         ~Texture();
     private:
         ImageData imageData;

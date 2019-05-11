@@ -23,7 +23,9 @@ namespace spk
         UniformBuffer& operator=(const UniformBuffer& rBuffer) = delete;
         UniformBuffer& operator=(UniformBuffer& rBuffer) = delete;
         UniformBuffer& operator=(UniformBuffer&& rBuffer);
-        ~UniformBuffer();
+        const uint32_t getSet() const;
+        const uint32_t getBinding() const;
+       ~UniformBuffer();
     private:
         vk::Buffer buffer;
         size_t size;

@@ -64,6 +64,16 @@ namespace spk
         return *this;
     }
 
+    const uint32_t Texture::getSet() const
+    {
+        return setIndex;
+    }
+
+    const uint32_t Texture::getBinding() const
+    {
+        return binding;
+    }
+
     Texture::Texture(){}
 
     Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
@@ -177,7 +187,6 @@ namespace spk
         vk::BufferImageCopy copyInfo;
         copyInfo.setBufferOffset(0);
         copyInfo.setBufferImageHeight(0);
-        std::cout << transmissionBufferInfo.size << '\n';
         copyInfo.setBufferRowLength(0);
         copyInfo.setImageExtent(imageData.extent);
         copyInfo.setImageOffset(vk::Offset3D());
@@ -240,10 +249,11 @@ namespace spk
         if(!transferred)
         {
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-            MemoryManager::getInstance()->freeMemory(memoryData.index);
             logicalDevice.destroyFence(textureReadyFence, nullptr);
-            logicalDevice.destroyImage(image, nullptr);
+            logicalDevice.destroySemaphore(textureReadySemaphore, nullptr);
             logicalDevice.destroyImageView(view, nullptr);
+            logicalDevice.destroyImage(image, nullptr);
+            MemoryManager::getInstance()->freeMemory(memoryData.index);
         }
     }
 

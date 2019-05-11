@@ -1,7 +1,7 @@
 #ifndef SPARK_WINDOW_SYSTEM_HPP
 #define SPARK_WINDOW_SYSTEM_HPP
 
-//#include {RenderTargetName.hpp}
+#include"ResourceSet.hpp"
 #include<vulkan/vulkan.hpp>
 #include<GLFW/glfw3.h>
 
@@ -15,7 +15,7 @@ namespace spk
         vk::SurfaceKHR& getSurface();
         const vk::SurfaceKHR& getSurface() const;
         GLFWwindow* getWindow();
-        ~WindowSystem();
+        void destroy();
     private:
         WindowSystem();
 

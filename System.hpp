@@ -5,6 +5,7 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include<vulkan/vulkan.hpp>
+#include<memory>
 #include<iostream>
 #include<vector>
 #include<string>
@@ -35,7 +36,7 @@ namespace spk
         const vk::Instance& getvkInstance() const;
         const vk::Device& getLogicalDevice() const;
         const vk::PhysicalDevice& getPhysicalDevice() const;
-        ~System();
+        void destroy();
     private:
         System();
         std::vector<const char*> getInstanceExtensions() const;
@@ -44,11 +45,14 @@ namespace spk
         void createInstance();
         void createPhysicalDevice();
         void createLogicalDevice();
+        static VKAPI_ATTR VkBool32 VKAPI_CALL callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
-        static System* systemInstance;
+        static std::unique_ptr<System> systemInstance;
         vk::Instance instance;
         vk::PhysicalDevice physicalDevice;
         vk::Device logicalDevice;
+        vk::DispatchLoaderDynamic loader;
+        vk::DebugUtilsMessengerEXT debugMessenger;
     };
 
 }

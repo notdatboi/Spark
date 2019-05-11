@@ -21,7 +21,7 @@ namespace spk
         vk::Queue& getPresentQueue();
         const vk::CommandPool& getPool() const;
         vk::CommandPool& getPool();
-        ~Executives();
+        void destroy();
     private:
         Executives();
         void createPool();

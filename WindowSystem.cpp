@@ -35,7 +35,6 @@ namespace spk
         static bool created = false;
         if(!created)
         {
-            std::cout << "Creating window system\n";
             windowSystemInstance = new WindowSystem();
             created = true;
         }
@@ -47,8 +46,10 @@ namespace spk
         return window;
     }
 
-    WindowSystem::~WindowSystem()
+    void WindowSystem::destroy()
     {
+        const auto& instance = System::getInstance()->getvkInstance();
+        instance.destroySurfaceKHR(surface, nullptr);
         glfwDestroyWindow(window);
     }
 

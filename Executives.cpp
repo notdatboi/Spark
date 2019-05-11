@@ -10,7 +10,7 @@ namespace spk
     Executives::Executives()
     {
         uint32_t queueFamilyPropertyCount;
-        vk::PhysicalDevice& physicalDevice = System::getInstance()->getPhysicalDevice();
+        const vk::PhysicalDevice& physicalDevice = System::getInstance()->getPhysicalDevice();
         physicalDevice.getQueueFamilyProperties(&queueFamilyPropertyCount, nullptr);
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties(queueFamilyPropertyCount);
         physicalDevice.getQueueFamilyProperties(&queueFamilyPropertyCount, queueFamilyProperties.data());
@@ -44,7 +44,6 @@ namespace spk
         static bool queuesObtained = false;
         if(!created)
         {
-            std::cout << "Creating executives\n";
             executivesInstance = new Executives();
             created = true;
             return executivesInstance;
@@ -113,7 +112,7 @@ namespace spk
         logicalDevice.createCommandPool(&poolInfo, nullptr, &pool);
     }
 
-    Executives::~Executives()
+    void Executives::destroy()
     {
         if(pool.operator VkCommandPool() != VK_NULL_HANDLE)
         {

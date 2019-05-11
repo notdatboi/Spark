@@ -40,15 +40,14 @@ namespace spk
         return logicalDevice;
     }
 
-    System* System::systemInstance = nullptr;
+    std::unique_ptr<System> System::systemInstance = nullptr;
 
     System* System::getInstance()
     {
         static bool created = false;
         if(!created)
         {
-            std::cout << "Creating system\n";
-            systemInstance = new System();
+            systemInstance.reset(new System());
             created = true;
             systemInstance->createInstance();
             WindowSystem::getInstance();
@@ -57,7 +56,7 @@ namespace spk
             systemInstance->createLogicalDevice();
             Executives::getInstance();
         }
-        return systemInstance;
+        return systemInstance.get();
     }
 
     std::vector<const char*> System::getInstanceExtensions() const
@@ -66,6 +65,7 @@ namespace spk
         const char ** glfwExtData;
         glfwExtData = glfwGetRequiredInstanceExtensions(&glfwExtCount);
         std::vector<const char *> extData(glfwExtData, glfwExtData + glfwExtCount);
+        if(enableValidation) extData.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         return extData;
     }
 
@@ -188,10 +188,46 @@ namespace spk
         {
             throw std::runtime_error("Failed to create logical device!\n");
         }
+
+        PFN_vkGetInstanceProcAddr getInstanceProcAddr = PFN_vkGetInstanceProcAddr(instance.getProcAddr("vkGetInstanceProcAddr"));
+        PFN_vkGetDeviceProcAddr getDeviceProcAddr = PFN_vkGetDeviceProcAddr(logicalDevice.getProcAddr("vkGetDeviceProcAddr"));
+        if(getInstanceProcAddr == nullptr || getDeviceProcAddr == nullptr) throw std::runtime_error("Failed to get instance or device process addresses!\n");
+        loader.init(instance, getInstanceProcAddr, logicalDevice, getDeviceProcAddr);
+
+        if(enableValidation)
+        {
+            vk::DebugUtilsMessengerCreateInfoEXT messengerInfo;
+            messengerInfo.setMessageSeverity(
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eError | 
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo | 
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose);
+            messengerInfo.setMessageType(
+                vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+                vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+                vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance);
+            messengerInfo.setPfnUserCallback(callback);
+            messengerInfo.setPUserData(nullptr);
+            if(instance.createDebugUtilsMessengerEXT(&messengerInfo, nullptr, &debugMessenger, loader) != vk::Result::eSuccess) throw std::runtime_error("Failed to create debug messenger!\n");
+        }
     }
 
-    System::~System()
+    VKAPI_ATTR VkBool32 VKAPI_CALL System::callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
     {
+        std::cout << "DEBUG INFO: " << pCallbackData->pMessage << '\n';
+        return false;
+    }
+
+    void System::destroy()
+    {
+        spk::Executives::getInstance()->destroy();
+        spk::MemoryManager::getInstance()->destroy();
+        spk::WindowSystem::getInstance()->destroy();
+        if(enableValidation)
+        {
+            instance.destroyDebugUtilsMessengerEXT(debugMessenger, nullptr, loader);
+        }
+        logicalDevice.destroy(nullptr);
         instance.destroy(nullptr);
         glfwTerminate();
     }

@@ -100,18 +100,20 @@ namespace spk
         index_t index;
         vk::DeviceSize offset = 0;
         std::string sFlags = vk::to_string(allocationInfo.flags);
-        if(freedIndices.size() == 0)
-        {
-            memoryArray.push_back(vk::DeviceMemory());
-            index = memoryArray.size() - 1;
-        }
-        else
-        {
-            index = *freedIndices.begin();
-            freedIndices.erase(freedIndices.begin());
-        }
         if(pendingAllocations.count(sFlags) == 0)
         {
+            if(freedIndices.size() == 0)
+            {
+                memoryArray.push_back(vk::DeviceMemory());
+                index = memoryArray.size() - 1;
+                memoryPartitionsCount.push_back(1);
+            }
+            else
+            {
+                index = *freedIndices.begin();
+                memoryPartitionsCount[index]++;
+                freedIndices.erase(freedIndices.begin());
+            }
             pendingAllocations[sFlags] = {index, allocationInfo.size, allocationInfo.flags};
         }
         else
@@ -119,6 +121,7 @@ namespace spk
             offset = pendingAllocations[sFlags].size;
             pendingAllocations[sFlags].size += allocationInfo.size;
             index = pendingAllocations[sFlags].index;
+            memoryPartitionsCount[index]++;
         }
         lazilyAllocatedIndices.insert(index);
         return {index, offset};
@@ -145,19 +148,31 @@ namespace spk
     {
         for(auto& pendingAlloc : pendingAllocations)
         {
+            std::cout << "Freeing pending allocation!\n";
             if(pendingAlloc.second.index == index) flushLazyAllocationsByFlags(pendingAlloc.second.flags);//throw std::runtime_error("Trying to free memory, that isn't allocated yet!\n");
         }
-        if(memoryPartitionsCount[index] <= 0) return;
+        if(memoryPartitionsCount[index] <= 0)
+        {
+            std::cout << "Trying to free freed memory!\n";
+            return;
+        }
         if(memoryPartitionsCount[index] == 1)
         {
+            std::cout << "Succesfully freed...\n";
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
             logicalDevice.freeMemory(memoryArray[index], nullptr);
+            memoryArray[index] = vk::DeviceMemory(VkDeviceMemory(VK_NULL_HANDLE));
             freedIndices.insert(index);
+            memoryPartitionsCount[index]--;
         }
-        else memoryPartitionsCount[index]--;
+        else
+        {
+            std::cout << "Freeing is pending...\n";
+            memoryPartitionsCount[index]--;
+        }
     }
 
-    MemoryManager::~MemoryManager()
+    void MemoryManager::destroy()
     {
         index_t i = 0;
         for(auto& memory : memoryArray)
