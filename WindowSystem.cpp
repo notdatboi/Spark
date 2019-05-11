@@ -4,7 +4,7 @@
 namespace spk
 {
 
-    WindowSystem* WindowSystem::windowSystemInstance = nullptr;
+    std::unique_ptr<WindowSystem> WindowSystem::windowSystemInstance = nullptr;
 
     WindowSystem::WindowSystem()
     {
@@ -35,10 +35,10 @@ namespace spk
         static bool created = false;
         if(!created)
         {
-            windowSystemInstance = new WindowSystem();
+            windowSystemInstance.reset(new WindowSystem());
             created = true;
         }
-        return windowSystemInstance;
+        return windowSystemInstance.get();
     }
 
     GLFWwindow* WindowSystem::getWindow()

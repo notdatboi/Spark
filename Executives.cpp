@@ -5,7 +5,7 @@
 namespace spk
 {
 
-    Executives* Executives::executivesInstance = nullptr;
+    std::unique_ptr<Executives> Executives::executivesInstance = nullptr;
 
     Executives::Executives()
     {
@@ -44,23 +44,23 @@ namespace spk
         static bool queuesObtained = false;
         if(!created)
         {
-            executivesInstance = new Executives();
+            executivesInstance.reset(new Executives());
             created = true;
-            return executivesInstance;
+            return executivesInstance.get();
         }
         if(!queuesObtained)
         {
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
             if(logicalDevice.operator VkDevice() == VK_NULL_HANDLE)
             {
-                return executivesInstance;
+                return executivesInstance.get();
             }
             queuesObtained = true;
             logicalDevice.getQueue(executivesInstance->graphicsQueueFamilyIndex, 0, &executivesInstance->graphicsQueue);
             logicalDevice.getQueue(executivesInstance->presentQueueFamilyIndex, 0, &executivesInstance->presentQueue);
             executivesInstance->createPool();
         }
-        return executivesInstance;
+        return executivesInstance.get();
     }
 
     const uint32_t Executives::getGraphicsQueueFamilyIndex() const

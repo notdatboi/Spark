@@ -26,7 +26,7 @@ namespace spk
 
     UniformBuffer::UniformBuffer(const size_t cSize/*, const bool cDeviceLocal*/, uint32_t cSetIndex, uint32_t cBinding)
     {
-        create(cSize/*, cDeviceLocal*/, cSetIndex, binding);
+        create(cSize/*, cDeviceLocal*/, cSetIndex, cBinding);
     }
 
     UniformBuffer& UniformBuffer::operator=(UniformBuffer&& rBuffer)

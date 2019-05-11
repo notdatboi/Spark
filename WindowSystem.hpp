@@ -4,6 +4,7 @@
 #include"ResourceSet.hpp"
 #include<vulkan/vulkan.hpp>
 #include<GLFW/glfw3.h>
+#include<memory>
 
 namespace spk
 {
@@ -19,7 +20,7 @@ namespace spk
     private:
         WindowSystem();
 
-        static WindowSystem* windowSystemInstance;
+        static std::unique_ptr<WindowSystem> windowSystemInstance;
         GLFWwindow* window;
         vk::SurfaceKHR surface;
     };

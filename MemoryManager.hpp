@@ -10,6 +10,7 @@
 #include<stdexcept>
 #include<set>
 #include<map>
+#include<memory>
 
 namespace spk
 {
@@ -53,7 +54,7 @@ namespace spk
         index_t allocateMemoryBlock(const MemoryAllocationInfo& info);                                  // allocates memory from free positions in the memory array or creates new device memory object
         void allocateMemoryBlock(const MemoryAllocationInfo& info, index_t index);                      // allocates memory from memory array's specific position
 
-        static MemoryManager* instance;
+        static std::unique_ptr<MemoryManager> instance;
         vk::PhysicalDeviceMemoryProperties memoryProperties;
         std::map<std::string, PendingAllocationData> pendingAllocations;                                // std::string is stringified value of flags; index_t here refers to index in memory array
         std::vector<vk::DeviceMemory> memoryArray;

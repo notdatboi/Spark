@@ -5,6 +5,7 @@
 #define GLFW_INCLUDE_VULKAN
 
 #include<vulkan/vulkan.hpp>
+#include<memory>
 
 namespace spk
 {
@@ -26,7 +27,7 @@ namespace spk
         Executives();
         void createPool();
 
-        static Executives* executivesInstance;
+        static std::unique_ptr<Executives> executivesInstance;
         uint32_t graphicsQueueFamilyIndex;
         uint32_t presentQueueFamilyIndex;
         vk::Queue graphicsQueue;

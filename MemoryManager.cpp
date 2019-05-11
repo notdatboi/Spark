@@ -4,7 +4,7 @@
 namespace spk
 {
 
-    MemoryManager* MemoryManager::instance = nullptr;
+    std::unique_ptr<MemoryManager> MemoryManager::instance = nullptr;
 
     MemoryManager::MemoryManager()
     {
@@ -18,9 +18,9 @@ namespace spk
         if(!created)
         {
             created = true;
-            instance = new MemoryManager();
+            instance.reset(new MemoryManager());
         }
-        return instance;
+        return instance.get();
     }
 
     uint32_t MemoryManager::findMemoryTypeIndex(vk::MemoryPropertyFlags flags, uint32_t memoryTypeBits) const
