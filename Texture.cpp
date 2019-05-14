@@ -74,6 +74,11 @@ namespace spk
         return binding;
     }
 
+    const vk::ImageLayout& Texture::getLayout() const
+    {
+        return imageData.layout;
+    }
+
     Texture::Texture(){}
 
     Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)

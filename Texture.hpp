@@ -36,6 +36,7 @@ namespace spk
         void create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding);
         const vk::ImageView& getImageView() const;
         vk::ImageView& getImageView();
+        const vk::ImageLayout& getLayout() const;
         void bindMemory(const vk::CommandBuffer& memoryBindBuffer);
         const vk::Fence& getReadyFence() const;
         Texture& operator=(const Texture& rTexture) = delete;
