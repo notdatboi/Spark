@@ -51,6 +51,11 @@ namespace spk
         return binding;
     }
 
+    const vk::DeviceSize UniformBuffer::getSize() const
+    {
+        return size;
+    }
+
     void UniformBuffer::create(const size_t cSize/*, const bool cDeviceLocal*/, uint32_t cSetIndex, uint32_t cBinding)
     {
         setIndex = cSetIndex;
