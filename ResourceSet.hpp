@@ -19,7 +19,7 @@ namespace spk
         ResourceSet();
         ResourceSet(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers);
         void create(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers);
-        void update(uint32_t set, uint32_t binding, const void* data);  // TODO: implement
+        void update(const uint32_t set, const uint32_t binding, const void* data);  // TODO: implement
         ~ResourceSet();
     private:
         vk::CommandBuffer initialCommandBuffer;

@@ -12,6 +12,16 @@ namespace spk
         init();
     }
 
+    void ResourceSet::update(const uint32_t set, const uint32_t binding, const void* data)
+    {
+        if(setContainmentData[set].bindings[binding].second) throw std::runtime_error("You can't change textures.\n");
+        else
+        {
+            uint32_t index = setContainmentData[set].bindings[binding].first;
+            uniformBuffers[index].update(data);
+        }
+    }
+
     void ResourceSet::init()
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
