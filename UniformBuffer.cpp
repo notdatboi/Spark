@@ -87,6 +87,7 @@ namespace spk
 
         vk::EventCreateInfo eventInfo;
         if(logicalDevice.createEvent(&eventInfo, nullptr, &bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
+        if(logicalDevice.resetEvent(bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset event!\n");
     }
 
     void UniformBuffer::update(const void* data)
@@ -95,7 +96,7 @@ namespace spk
         static bool memoryBound = false;
         const vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(memoryData.index);
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        logicalDevice.resetEvent(bufferReadyEvent);
+        if(logicalDevice.resetEvent(bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset event!\n");
 
         if(!memoryBound)
         {
