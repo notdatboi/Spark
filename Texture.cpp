@@ -54,12 +54,14 @@ namespace spk
     {
         destroy();
         create(rTexture.imageData.extent.width, rTexture.imageData.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
+        return *this;
     }
 
     Texture& Texture::operator=(Texture& rTexture)
     {
         destroy();
         create(rTexture.imageData.extent.width, rTexture.imageData.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
+        return *this;
     }
 
     Texture& Texture::operator=(Texture&& rTexture)
@@ -103,6 +105,16 @@ namespace spk
     }
 
     Texture::Texture(){}
+
+    Texture::Texture(const Texture& txt)
+    {
+        (*this) = txt;
+    }
+    
+    Texture::Texture(Texture&& txt)
+    {
+        (*this) = txt;
+    }
 
     Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
     {

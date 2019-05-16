@@ -4,9 +4,14 @@ namespace spk
 {
     UniformBuffer::UniformBuffer(){}
 
-    const vk::DeviceSize UniformBuffer::getOffset() const
+    UniformBuffer::UniformBuffer(const UniformBuffer& ub)
     {
-        return memoryData.offset;
+        (*this) = ub;
+    }
+
+    UniformBuffer::UniformBuffer(UniformBuffer&& ub)
+    {
+        (*this) = ub;
     }
 
     const vk::Buffer& UniformBuffer::getBuffer() const
@@ -33,12 +38,14 @@ namespace spk
     {
         destroy();
         create(rBuffer.size, rBuffer.setIndex, rBuffer.binding);
+        return *this;
     }
 
     UniformBuffer& UniformBuffer::operator=(UniformBuffer& rBuffer)
     {
         destroy();
         create(rBuffer.size, rBuffer.setIndex, rBuffer.binding);
+        return *this;
     }
 
     UniformBuffer& UniformBuffer::operator=(UniformBuffer&& rBuffer)
@@ -127,10 +134,13 @@ namespace spk
             if(logicalDevice.bindBufferMemory(buffer, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory to buffer!\n");
         }
         
-        void* mappedMemory;
-        if(logicalDevice.mapMemory(memory, memoryData.offset, size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
-        memcpy(mappedMemory, data, size);
-        logicalDevice.unmapMemory(memory);
+        if(data != nullptr)
+        {
+            void* mappedMemory;
+            if(logicalDevice.mapMemory(memory, memoryData.offset, size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
+            memcpy(mappedMemory, data, size);
+            logicalDevice.unmapMemory(memory);
+        }
         logicalDevice.setEvent(bufferReadyEvent);
     }
 

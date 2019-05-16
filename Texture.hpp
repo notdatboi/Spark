@@ -32,6 +32,8 @@ namespace spk
     {
     public:
         Texture();
+        Texture(const Texture& txt);
+        Texture(Texture&& txt);
         Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding);
         void create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding);
         const vk::ImageView& getImageView() const;

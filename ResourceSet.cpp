@@ -6,18 +6,30 @@ namespace spk
     ResourceSet::ResourceSet(){}
 
     ResourceSet::ResourceSet(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers): 
-        textures(std::move(cTextures)), 
-        uniformBuffers(std::move(cUniformBuffers))
+        textures(cTextures), 
+        uniformBuffers(cUniformBuffers)
     {
         init();
     }
+
+    void ResourceSet::create(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers)
+    {
+        textures.insert(textures.begin(), cTextures.begin(), cTextures.end());
+        uniformBuffers.insert(uniformBuffers.begin(), cUniformBuffers.begin(), cUniformBuffers.end());
+        init();
+    }
+
+    /* FOR TESTING */
+    const vk::PipelineLayout& ResourceSet::getPipelineLayout() const {return pipelineLayout;}
+    const std::vector<vk::DescriptorSet>& ResourceSet::getDescriptorSets() const {return descriptorSets;}
+    /* */
 
     void ResourceSet::update(const uint32_t set, const uint32_t binding, const void* data)
     {
         if(setContainmentData[set].bindings[binding].second) throw std::runtime_error("You can't change textures.\n");
         else
         {
-            uint32_t index = setContainmentData[set].bindings[binding].first;
+            uint32_t index = setContainmentData[set].bindings[binding].first;                   // TODO: implement CPU thread synchronization
             uniformBuffers[index].update(data);
         }
     }
@@ -99,6 +111,7 @@ namespace spk
         }
 
         bindTextureMemory();
+        bindBufferMemory();
         createDescriptorPool();
         createDescriptorLayouts();
         allocateDescriptorSets();
@@ -110,6 +123,14 @@ namespace spk
         for(auto& texture : textures)
         {
             texture.bindMemory(initialCommandBuffer);
+        }
+    }
+
+    void ResourceSet::bindBufferMemory()
+    {
+        for(auto& buffer : uniformBuffers)
+        {
+            buffer.update(nullptr);
         }
     }
 
@@ -184,6 +205,8 @@ namespace spk
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         std::vector<vk::WriteDescriptorSet> setWrites;
+        std::vector<vk::DescriptorImageInfo> imgInfos;
+        std::vector<vk::DescriptorBufferInfo> bufInfos;
         for(const auto& set : setContainmentData)
         {
             for(const auto& binding : set.second.bindings)
@@ -201,15 +224,17 @@ namespace spk
                     imgInfo.setImageLayout(textures[binding.second.first].getLayout());
                     imgInfo.setSampler(uniqueSampler);
                     imgInfo.setImageView(textures[binding.second.first].getImageView());
-                    write.setPImageInfo(&imgInfo);
+                    imgInfos.push_back(imgInfo);
+                    write.setPImageInfo(&imgInfos.back());
                     write.setPBufferInfo(nullptr);
                 }
                 else
                 {
                     bufInfo.setBuffer(uniformBuffers[binding.second.first].getBuffer());
-                    bufInfo.setOffset(uniformBuffers[binding.second.first].getOffset());
+                    bufInfo.setOffset(0);                                                       // because this is not memory offset, but buffer offset
                     bufInfo.setRange(uniformBuffers[binding.second.first].getSize());
-                    write.setPBufferInfo(&bufInfo);
+                    bufInfos.push_back(bufInfo);
+                    write.setPBufferInfo(&bufInfos.back());
                     write.setPImageInfo(nullptr);
                 }
                 write.setPTexelBufferView(nullptr);
