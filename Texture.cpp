@@ -50,6 +50,18 @@ namespace spk
         return info;
     }
 
+    Texture& Texture::operator=(const Texture& rTexture)
+    {
+        destroy();
+        create(rTexture.imageData.extent.width, rTexture.imageData.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
+    }
+
+    Texture& Texture::operator=(Texture& rTexture)
+    {
+        destroy();
+        create(rTexture.imageData.extent.width, rTexture.imageData.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
+    }
+
     Texture& Texture::operator=(Texture&& rTexture)
     {
         rTexture.transferred = true;
@@ -62,6 +74,16 @@ namespace spk
         rawImageData = std::move(rTexture.rawImageData);
         binding = std::move(rTexture.binding);
         return *this;
+    }
+
+    void Texture::resetSetIndex(const uint32_t newIndex)
+    {
+        setIndex = newIndex;
+    }
+
+    void Texture::resetBinding(const uint32_t newBinding)
+    {
+        binding = newBinding;
     }
 
     const uint32_t Texture::getSet() const
@@ -89,7 +111,8 @@ namespace spk
     void Texture::create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
     {
         imageData.extent = vk::Extent3D(width, height, 1);
-        rawImageData = rawData;
+        rawImageData.resize(width * height * imageData.channelCount);
+        memcpy(rawImageData.data(), rawData, rawImageData.size());
         setIndex = cSetIndex;
         binding = cBinding;
         init();
@@ -152,7 +175,7 @@ namespace spk
 
         void * mappedMemory;
         if(logicalDevice.mapMemory(bufferMemory, bufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
-        memcpy(mappedMemory, rawImageData, transmissionBufferInfo.size);
+        memcpy(mappedMemory, rawImageData.data(), transmissionBufferInfo.size);
         logicalDevice.unmapMemory(bufferMemory);
         if(logicalDevice.bindBufferMemory(transmissionBuffer, bufferMemory, bufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
 
@@ -249,17 +272,25 @@ namespace spk
         if(logicalDevice.createImageView(&viewInfo, nullptr, &view) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image view!\n");
     }
 
-    Texture::~Texture()
+    void Texture::destroy()
     {
-        if(!transferred)
+        if(!transferred)                                                                        // If the texture wasn't moved to another texture..
         {
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-            logicalDevice.destroyFence(textureReadyFence, nullptr);
-            logicalDevice.destroySemaphore(textureReadySemaphore, nullptr);
-            logicalDevice.destroyImageView(view, nullptr);
-            logicalDevice.destroyImage(image, nullptr);
-            MemoryManager::getInstance()->freeMemory(memoryData.index);
+            if(textureReadyFence.operator VkFence() != VK_NULL_HANDLE)                          // ..and it was created properly, delete it
+            {
+                logicalDevice.destroyFence(textureReadyFence, nullptr);
+                logicalDevice.destroySemaphore(textureReadySemaphore, nullptr);
+                logicalDevice.destroyImageView(view, nullptr);
+                logicalDevice.destroyImage(image, nullptr);
+                MemoryManager::getInstance()->freeMemory(memoryData.index);
+            }
         }
+    }
+
+    Texture::~Texture()
+    {
+        destroy();
     }
 
 }
