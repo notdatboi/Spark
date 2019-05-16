@@ -64,6 +64,7 @@ namespace spk
 
     Texture& Texture::operator=(Texture&& rTexture)
     {
+        destroy();
         rTexture.transferred = true;
         imageData = std::move(rTexture.imageData);
         memoryData = std::move(rTexture.memoryData);
@@ -280,6 +281,7 @@ namespace spk
             if(textureReadyFence.operator VkFence() != VK_NULL_HANDLE)                          // ..and it was created properly, delete it
             {
                 logicalDevice.destroyFence(textureReadyFence, nullptr);
+                textureReadyFence = vk::Fence();
                 logicalDevice.destroySemaphore(textureReadySemaphore, nullptr);
                 logicalDevice.destroyImageView(view, nullptr);
                 logicalDevice.destroyImage(image, nullptr);
