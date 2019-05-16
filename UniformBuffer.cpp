@@ -29,8 +29,21 @@ namespace spk
         create(cSize/*, cDeviceLocal*/, cSetIndex, cBinding);
     }
 
+    UniformBuffer& UniformBuffer::operator=(const UniformBuffer& rBuffer)
+    {
+        destroy();
+        create(rBuffer.size, rBuffer.setIndex, rBuffer.binding);
+    }
+
+    UniformBuffer& UniformBuffer::operator=(UniformBuffer& rBuffer)
+    {
+        destroy();
+        create(rBuffer.size, rBuffer.setIndex, rBuffer.binding);
+    }
+
     UniformBuffer& UniformBuffer::operator=(UniformBuffer&& rBuffer)
     {
+        destroy();
         rBuffer.transferred = true;
         buffer = std::move(rBuffer.buffer);
         size = std::move(rBuffer.size);
@@ -39,6 +52,16 @@ namespace spk
         setIndex = std::move(rBuffer.setIndex);
         binding = std::move(rBuffer.binding);
         return *this;
+    }
+
+    void UniformBuffer::resetSetIndex(const uint32_t newIndex)
+    {
+        setIndex = newIndex;
+    }
+
+    void UniformBuffer::resetBinding(const uint32_t newBinding)
+    {
+        binding = newBinding;
     }
 
     const uint32_t UniformBuffer::getSet() const
@@ -193,14 +216,23 @@ namespace spk
         if(memoryBindBuffer.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
     }*/
 
+    void UniformBuffer::destroy()
+    {
+        if(!transferred)                                                                    // If buffer wasn't transferred..
+        {
+            if(buffer.operator VkBuffer() != VK_NULL_HANDLE)                                // ..and was properly created and wasn't destroyed, destroy it
+            {
+                const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+                logicalDevice.destroyBuffer(buffer, nullptr);
+                buffer = vk::Buffer();
+                MemoryManager::getInstance()->freeMemory(memoryData.index);
+                logicalDevice.destroyEvent(bufferReadyEvent, nullptr);
+            }
+        }
+    }
+
     UniformBuffer::~UniformBuffer()
     {
-        if(!transferred)
-        {
-            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-            logicalDevice.destroyBuffer(buffer, nullptr);
-            MemoryManager::getInstance()->freeMemory(memoryData.index);
-            logicalDevice.destroyEvent(bufferReadyEvent, nullptr);
-        }
+        destroy();
     }
 }

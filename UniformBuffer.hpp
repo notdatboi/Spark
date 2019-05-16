@@ -21,9 +21,11 @@ namespace spk
         void update(const void* data);
         const vk::DeviceSize getOffset() const;
         const vk::DeviceSize getSize() const;
-        UniformBuffer& operator=(const UniformBuffer& rBuffer) = delete;
-        UniformBuffer& operator=(UniformBuffer& rBuffer) = delete;
+        UniformBuffer& operator=(const UniformBuffer& rBuffer);
+        UniformBuffer& operator=(UniformBuffer& rBuffer);
         UniformBuffer& operator=(UniformBuffer&& rBuffer);
+        void resetSetIndex(const uint32_t newIndex);
+        void resetBinding(const uint32_t newBinding);
         const uint32_t getSet() const;
         const uint32_t getBinding() const;
        ~UniformBuffer();
@@ -36,6 +38,8 @@ namespace spk
         uint32_t setIndex;
         uint32_t binding;
         bool transferred = false;
+
+        void destroy();
     };
 
 }
