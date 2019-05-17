@@ -1,10 +1,7 @@
 #ifndef SPARK_EXECUTIVES_HPP
 #define SPARK_EXECUTIVES_HPP
 
-#define VULKAN_HPP_DISABLE_ENHANCED_MODE
-#define GLFW_INCLUDE_VULKAN
-
-#include<vulkan/vulkan.hpp>
+#include"SparkIncludeBase.hpp"
 #include<memory>
 
 namespace spk

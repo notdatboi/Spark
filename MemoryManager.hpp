@@ -1,18 +1,11 @@
 #ifndef SPARK_MEMORY_MANAGER_HPP
 #define SPARK_MEMORY_MANAGER_HPP
 
-#define VULKAN_HPP_DISABLE_ENHANCED_MODE
-#define GLFW_INCLUDE_VULKAN
-
-// check if memory is leaking
-
-#include<vulkan/vulkan.hpp>
-#include<vector>
-#include<GLFW/glfw3.h>
-#include<stdexcept>
+#include"SparkIncludeBase.hpp"
 #include<set>
 #include<map>
 #include<memory>
+#include<vector>
 
 namespace spk
 {

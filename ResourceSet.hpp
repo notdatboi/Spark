@@ -4,6 +4,7 @@
 #include"Texture.hpp"
 #include"UniformBuffer.hpp"
 #include<map>
+#include"SparkIncludeBase.hpp"
 
 namespace spk
 {

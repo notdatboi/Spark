@@ -1,10 +1,9 @@
 #ifndef SPARK_WINDOW_SYSTEM_HPP
 #define SPARK_WINDOW_SYSTEM_HPP
 
-#include"ResourceSet.hpp"
-#include<vulkan/vulkan.hpp>
-#include<GLFW/glfw3.h>
+#include"SparkIncludeBase.hpp"
 #include<memory>
+#include"ResourceSet.hpp"
 
 namespace spk
 {

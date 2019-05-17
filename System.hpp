@@ -1,18 +1,11 @@
 #ifndef SPARK_SYSTEM_HPP
 #define SPARK_SYSTEM_HPP
 
-#define VULKAN_HPP_DISABLE_ENHANCED_MODE
-#define GLFW_INCLUDE_VULKAN
-
-#include<vulkan/vulkan.hpp>
-#include<memory>
-#include<iostream>
+#include"SparkIncludeBase.hpp"
 #include<vector>
 #include<string>
-#include<GLFW/glfw3.h>
-#include<stdexcept>
-
-#define DEBUG
+#include<iostream>
+#include<memory>
 
 namespace spk
 {
