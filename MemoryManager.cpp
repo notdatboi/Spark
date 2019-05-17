@@ -27,7 +27,10 @@ namespace spk
     {
         for(int i = 0; i < memoryProperties.memoryTypeCount; ++i)
         {
-            if((((memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) && ((1 << i) & memoryTypeBits))) return i;
+            if((((memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) && ((1 << i) & memoryTypeBits)))
+            {
+                return i;
+            }
         }
         throw std::runtime_error("Failed to find requested memory propery flags!\n");
     }
@@ -83,6 +86,7 @@ namespace spk
         MemoryAllocationInfo info;
         info.flags = flags;
         info.size = data.size;
+        info.memoryTypeBits = data.memoryTypeBits;
         allocateMemoryBlock(info, data.index);
         auto indexIterator = lazilyAllocatedIndices.find(data.index);
         lazilyAllocatedIndices.erase(indexIterator);
@@ -114,14 +118,35 @@ namespace spk
                 memoryPartitionsCount[index]++;
                 freedIndices.erase(freedIndices.begin());
             }
-            pendingAllocations[sFlags] = {index, allocationInfo.size, allocationInfo.flags};
+            pendingAllocations[sFlags] = {index, allocationInfo.size, allocationInfo.flags, allocationInfo.memoryTypeBits};
         }
         else
         {
-            offset = pendingAllocations[sFlags].size;
-            pendingAllocations[sFlags].size += allocationInfo.size;
-            index = pendingAllocations[sFlags].index;
-            memoryPartitionsCount[index]++;
+            if(pendingAllocations[sFlags].memoryTypeBits & allocationInfo.memoryTypeBits)
+            {
+                offset = pendingAllocations[sFlags].size;
+                pendingAllocations[sFlags].size += allocationInfo.size;
+                pendingAllocations[sFlags].memoryTypeBits &= allocationInfo.memoryTypeBits;
+                index = pendingAllocations[sFlags].index;
+                memoryPartitionsCount[index]++;
+            }
+            else
+            {
+                flushLazyAllocationsByFlags(allocationInfo.flags);
+                if(freedIndices.size() == 0)
+                {
+                    memoryArray.push_back(vk::DeviceMemory());
+                    index = memoryArray.size() - 1;
+                    memoryPartitionsCount.push_back(1);
+                }
+                else
+                {
+                    index = *freedIndices.begin();
+                    memoryPartitionsCount[index]++;
+                    freedIndices.erase(freedIndices.begin());
+                }
+                pendingAllocations[sFlags] = {index, allocationInfo.size, allocationInfo.flags, allocationInfo.memoryTypeBits};
+            }
         }
         lazilyAllocatedIndices.insert(index);
         return {index, offset};
@@ -148,17 +173,17 @@ namespace spk
     {
         for(auto& pendingAlloc : pendingAllocations)
         {
-            std::cout << "Freeing pending allocation!\n";
-            if(pendingAlloc.second.index == index) flushLazyAllocationsByFlags(pendingAlloc.second.flags);//throw std::runtime_error("Trying to free memory, that isn't allocated yet!\n");
+            if(pendingAlloc.second.index == index)
+            {
+                flushLazyAllocationsByFlags(pendingAlloc.second.flags);//throw std::runtime_error("Trying to free memory, that isn't allocated yet!\n");
+            }
         }
         if(memoryPartitionsCount[index] <= 0)
         {
-            std::cout << "Trying to free freed memory!\n";
             return;
         }
         if(memoryPartitionsCount[index] == 1)
         {
-            std::cout << "Succesfully freed...\n";
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
             logicalDevice.freeMemory(memoryArray[index], nullptr);
             memoryArray[index] = vk::DeviceMemory(VkDeviceMemory(VK_NULL_HANDLE));
@@ -167,7 +192,6 @@ namespace spk
         }
         else
         {
-            std::cout << "Freeing is pending...\n";
             memoryPartitionsCount[index]--;
         }
     }
