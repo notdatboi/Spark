@@ -174,23 +174,23 @@ namespace spk
         transmissionBufferInfo.setPQueueFamilyIndices(&index);
         transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
         transmissionBufferInfo.setSize(imageInfo.extent.width * imageInfo.extent.height * imageInfo.channelCount);
-        transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);             // add transferDst?
+        transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
         if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
 
         vk::MemoryRequirements transmissionBufferMemoryRequirements;
         logicalDevice.getBufferMemoryRequirements(transmissionBuffer, &transmissionBufferMemoryRequirements);
         MemoryAllocationInfo allocInfo;
-        allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;         // make memory property non-coherent
+        allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;         // TODO: make memory property non-coherent
         allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
         allocInfo.size = transmissionBufferMemoryRequirements.size;
         AllocatedMemoryData bufferData = MemoryManager::getInstance()->allocateMemory(allocInfo);
         vk::DeviceMemory& bufferMemory = MemoryManager::getInstance()->getMemory(bufferData.index);
 
+        if(logicalDevice.bindBufferMemory(transmissionBuffer, bufferMemory, bufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
         void * mappedMemory;
         if(logicalDevice.mapMemory(bufferMemory, bufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
         memcpy(mappedMemory, rawImageData.data(), transmissionBufferInfo.size);
         logicalDevice.unmapMemory(bufferMemory);
-        if(logicalDevice.bindBufferMemory(transmissionBuffer, bufferMemory, bufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
 
         vk::CommandBufferBeginInfo commandBufferInfo;
         commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
