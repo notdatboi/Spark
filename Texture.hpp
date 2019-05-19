@@ -8,9 +8,9 @@
 namespace spk
 {
 
-    struct ImageData
+    struct ImageInfo
     {
-        ImageData();
+        ImageInfo();
         operator vk::ImageCreateInfo();
         vk::ImageCreateFlags flags;
         vk::ImageType type;
@@ -31,26 +31,29 @@ namespace spk
     class Texture
     {
     public:
+        /* Public interface */
         Texture();
         Texture(const Texture& txt);
         Texture(Texture&& txt);
         Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding);
         void create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding);
-        const vk::ImageView& getImageView() const;
-        vk::ImageView& getImageView();
-        const vk::ImageLayout& getLayout() const;
-        void bindMemory(const vk::CommandBuffer& memoryBindBuffer);
-        const vk::Fence& getReadyFence() const;
         Texture& operator=(const Texture& rTexture);
         Texture& operator=(Texture& rTexture);
         Texture& operator=(Texture&& rTexture);
         void resetSetIndex(const uint32_t newIndex);
         void resetBinding(const uint32_t newBinding);
+        ~Texture();
+        /* */
+
+        const vk::ImageView& getImageView() const;
+        vk::ImageView& getImageView();
+        const vk::ImageLayout& getLayout() const;
+        void bindMemory(const vk::CommandBuffer& memoryBindBuffer);
+        const vk::Fence& getReadyFence() const;
         const uint32_t getSet() const;
         const uint32_t getBinding() const;
-        ~Texture();
     private:
-        ImageData imageData;
+        ImageInfo imageInfo;
         AllocatedMemoryData memoryData;
         vk::Image image;
         vk::ImageView view;

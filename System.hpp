@@ -19,7 +19,10 @@ namespace spk
     class System
     {
     public:
+        /* Public interface */
         static System* getInstance();
+        /* */
+
         //operator vk::Instance() const;
         //operator vk::PhysicalDevice() const;
         //operator vk::Device() const;

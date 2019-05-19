@@ -3,7 +3,7 @@
 namespace spk
 {
 
-    ImageData::ImageData()
+    ImageInfo::ImageInfo()
     {
         type = vk::ImageType::e2D;
         format = vk::Format::eR8G8B8A8Unorm;
@@ -31,7 +31,7 @@ namespace spk
         channelCount = 4;
     }
 
-    ImageData::operator vk::ImageCreateInfo()
+    ImageInfo::operator vk::ImageCreateInfo()
     {
         vk::ImageCreateInfo info;
         info.setArrayLayers(arrayLayers);
@@ -53,14 +53,14 @@ namespace spk
     Texture& Texture::operator=(const Texture& rTexture)
     {
         destroy();
-        create(rTexture.imageData.extent.width, rTexture.imageData.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
+        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
         return *this;
     }
 
     Texture& Texture::operator=(Texture& rTexture)
     {
         destroy();
-        create(rTexture.imageData.extent.width, rTexture.imageData.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
+        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
         return *this;
     }
 
@@ -68,7 +68,7 @@ namespace spk
     {
         destroy();
         rTexture.transferred = true;
-        imageData = std::move(rTexture.imageData);
+        imageInfo = std::move(rTexture.imageInfo);
         memoryData = std::move(rTexture.memoryData);
         image = std::move(rTexture.image);
         view = std::move(rTexture.view);
@@ -101,7 +101,7 @@ namespace spk
 
     const vk::ImageLayout& Texture::getLayout() const
     {
-        return imageData.layout;
+        return imageInfo.layout;
     }
 
     Texture::Texture(){}
@@ -123,8 +123,8 @@ namespace spk
 
     void Texture::create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
     {
-        imageData.extent = vk::Extent3D(width, height, 1);
-        rawImageData.resize(width * height * imageData.channelCount);
+        imageInfo.extent = vk::Extent3D(width, height, 1);
+        rawImageData.resize(width * height * imageInfo.channelCount);
         memcpy(rawImageData.data(), rawData, rawImageData.size());
         setIndex = cSetIndex;
         binding = cBinding;
@@ -134,7 +134,7 @@ namespace spk
     void Texture::init()
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        vk::ImageCreateInfo info = imageData;
+        vk::ImageCreateInfo info = imageInfo;
         if(logicalDevice.createImage(&info, nullptr, &image) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image!\n");
         vk::MemoryRequirements memoryRequirements;
         logicalDevice.getImageMemoryRequirements(image, &memoryRequirements);
@@ -173,7 +173,7 @@ namespace spk
         uint32_t index = Executives::getInstance()->getGraphicsQueueFamilyIndex();
         transmissionBufferInfo.setPQueueFamilyIndices(&index);
         transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
-        transmissionBufferInfo.setSize(imageData.extent.width * imageData.extent.height * imageData.channelCount);
+        transmissionBufferInfo.setSize(imageInfo.extent.width * imageInfo.extent.height * imageInfo.channelCount);
         transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);             // add transferDst?
         if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
 
@@ -210,9 +210,9 @@ namespace spk
         imageInitialBarrier.setImage(image);
         imageInitialBarrier.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
         imageInitialBarrier.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
-        imageInitialBarrier.setOldLayout(imageData.layout);
+        imageInitialBarrier.setOldLayout(imageInfo.layout);
         imageInitialBarrier.setNewLayout(vk::ImageLayout::eTransferDstOptimal);
-        imageData.layout = vk::ImageLayout::eTransferDstOptimal;
+        imageInfo.layout = vk::ImageLayout::eTransferDstOptimal;
         imageInitialBarrier.setSubresourceRange(subresourceRange);
         memoryBindBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(), 
             0, nullptr,
@@ -229,10 +229,10 @@ namespace spk
         copyInfo.setBufferOffset(0);
         copyInfo.setBufferImageHeight(0);
         copyInfo.setBufferRowLength(0);
-        copyInfo.setImageExtent(imageData.extent);
+        copyInfo.setImageExtent(imageInfo.extent);
         copyInfo.setImageOffset(vk::Offset3D());
         copyInfo.setImageSubresource(subresource);
-        memoryBindBuffer.copyBufferToImage(transmissionBuffer, image, imageData.layout, 1, &copyInfo);
+        memoryBindBuffer.copyBufferToImage(transmissionBuffer, image, imageInfo.layout, 1, &copyInfo);
 
         vk::ImageMemoryBarrier imageBarrier;
         imageBarrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
@@ -240,9 +240,9 @@ namespace spk
         imageBarrier.setImage(image);
         imageBarrier.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
         imageBarrier.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
-        imageBarrier.setOldLayout(imageData.layout);
+        imageBarrier.setOldLayout(imageInfo.layout);
         imageBarrier.setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-        imageData.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        imageInfo.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
         imageBarrier.setSubresourceRange(subresourceRange);
         memoryBindBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexShader, vk::DependencyFlags(), 
             0, nullptr,
@@ -279,7 +279,7 @@ namespace spk
         vk::ImageViewCreateInfo viewInfo;
         viewInfo.setImage(image);
         viewInfo.setViewType(vk::ImageViewType::e2D);
-        viewInfo.setFormat(imageData.format);
+        viewInfo.setFormat(imageInfo.format);
         viewInfo.setComponents(vk::ComponentMapping());
         viewInfo.setSubresourceRange(range);
         if(logicalDevice.createImageView(&viewInfo, nullptr, &view) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image view!\n");

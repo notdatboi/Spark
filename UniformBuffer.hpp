@@ -11,25 +11,28 @@ namespace spk
     class UniformBuffer
     {
     public:
+        /* Public interface */
         UniformBuffer();
         UniformBuffer(const UniformBuffer& ub);
         UniformBuffer(UniformBuffer&& ub);
         UniformBuffer(const size_t cSize/*, const bool cDeviceLocal = false*/, uint32_t cSetIndex, uint32_t cBinding);
         void create(const size_t cSize/*, const bool cDeviceLocal = false*/, uint32_t cSetIndex, uint32_t cBinding);
-        const vk::Buffer& getBuffer() const;
-        vk::Buffer& getBuffer();
-        const vk::Event& getReadyEvent() const;
-        //void update(const vk::CommandBuffer& memoryBindBuffer, const void* data);
-        void update(const void* data);
-        const vk::DeviceSize getSize() const;
         UniformBuffer& operator=(const UniformBuffer& rBuffer);
         UniformBuffer& operator=(UniformBuffer& rBuffer);
         UniformBuffer& operator=(UniformBuffer&& rBuffer);
         void resetSetIndex(const uint32_t newIndex);
         void resetBinding(const uint32_t newBinding);
+       ~UniformBuffer();
+       /* */
+
+        void bindMemory();
+        void update(const void* data);
+        const vk::Buffer& getBuffer() const;
+        vk::Buffer& getBuffer();
+        const vk::Event& getReadyEvent() const;
+        const vk::DeviceSize getSize() const;
         const uint32_t getSet() const;
         const uint32_t getBinding() const;
-       ~UniformBuffer();
     private:
         vk::Buffer buffer;
         size_t size;

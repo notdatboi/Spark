@@ -17,15 +17,18 @@ namespace spk
     class ResourceSet
     {
     public:
+        /* Public interface */
         ResourceSet();
         ResourceSet(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers);
         void create(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers);
         void update(const uint32_t set, const uint32_t binding, const void* data);
+        ~ResourceSet();
+        /* */
+
         /* FOR TESTING */
         const vk::PipelineLayout& getPipelineLayout() const;
         const std::vector<vk::DescriptorSet>& getDescriptorSets() const;
         /* */
-        ~ResourceSet();
     private:
         vk::CommandBuffer initialCommandBuffer;
         std::vector<Texture> textures;

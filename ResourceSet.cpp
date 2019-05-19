@@ -130,7 +130,7 @@ namespace spk
     {
         for(auto& buffer : uniformBuffers)
         {
-            buffer.update(nullptr);
+            buffer.bindMemory();
         }
     }
 
