@@ -1,7 +1,6 @@
 #ifndef SPARK_VERTEX_BUFFER_HPP
 #define SPARK_VERTEX_BUFFER_HPP
 
-#include"SparkIncludeBase.hpp"
 #include"System.hpp"
 #include"MemoryManager.hpp"
 #include"Executives.hpp"
@@ -55,7 +54,7 @@ namespace spk
         VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize);
         void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize);
         void update(const vk::CommandBuffer& updateCommandBuffer, const void * data);           // TODO: make a staging transmission buffer a class field, make command buffer not one-timesubmit buffer
-        VertexBuffer::~VertexBuffer();
+        ~VertexBuffer();
         /* */
 
         void bindMemory();
@@ -70,6 +69,7 @@ namespace spk
         vk::Semaphore bufferUpdatedSemaphore;
 
         void init();
+        void destroy();
     };
 
 } 
