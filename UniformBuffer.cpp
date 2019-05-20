@@ -6,12 +6,18 @@ namespace spk
 
     UniformBuffer::UniformBuffer(const UniformBuffer& ub)
     {
-        (*this) = ub;
+        create(ub.size, ub.setIndex, ub.binding);
     }
 
     UniformBuffer::UniformBuffer(UniformBuffer&& ub)
     {
-        (*this) = ub;
+        ub.transferred = true;
+        buffer = std::move(ub.buffer);
+        size = std::move(ub.size);
+        memoryData = std::move(ub.memoryData);
+        bufferReadyEvent = std::move(ub.bufferReadyEvent);
+        setIndex = std::move(ub.setIndex);
+        binding = std::move(ub.binding);
     }
 
     const vk::Buffer& UniformBuffer::getBuffer() const

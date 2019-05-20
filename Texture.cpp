@@ -108,12 +108,20 @@ namespace spk
 
     Texture::Texture(const Texture& txt)
     {
-        (*this) = txt;
+        create(txt.imageInfo.extent.width, txt.imageInfo.extent.height, txt.rawImageData.data(), txt.setIndex, txt.binding);
     }
     
     Texture::Texture(Texture&& txt)
     {
-        (*this) = txt;
+        txt.transferred = true;
+        imageInfo = std::move(txt.imageInfo);
+        memoryData = std::move(txt.memoryData);
+        image = std::move(txt.image);
+        view = std::move(txt.view);
+        textureReadyFence = std::move(txt.textureReadyFence);
+        textureReadySemaphore = std::move(txt.textureReadySemaphore);
+        rawImageData = std::move(txt.rawImageData);
+        binding = std::move(txt.binding);
     }
 
     Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
