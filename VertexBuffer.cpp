@@ -10,11 +10,54 @@ namespace spk
         init();
     }
 
+    VertexBuffer::VertexBuffer(const VertexBuffer& vb)
+    {
+        create(vb.alignmentInfo, vb.size);
+    }
+
+    VertexBuffer::VertexBuffer(VertexBuffer&& vb)
+    {
+        vb.transferred = true;
+        alignmentInfo = std::move(vb.alignmentInfo);
+        size = std::move(vb.size);
+        memoryData = std::move(vb.memoryData);
+        buffer = std::move(vb.buffer);
+        bufferUpdatedFence = std::move(vb.bufferUpdatedFence);
+        bufferUpdatedSemaphore = std::move(vb.bufferUpdatedSemaphore);
+    }
+
     void VertexBuffer::create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize)
     {
         alignmentInfo = cAlignmentInfo;
         size = cSize;
         init();
+    }
+
+    VertexBuffer& VertexBuffer::operator=(const VertexBuffer& rBuffer)
+    {
+        destroy();
+        create(rBuffer.alignmentInfo, rBuffer.size);
+        return *this;
+    }
+
+    VertexBuffer& VertexBuffer::operator=(VertexBuffer& rBuffer)
+    {
+        destroy();
+        create(rBuffer.alignmentInfo, rBuffer.size);
+        return *this;
+    }
+
+    VertexBuffer& VertexBuffer::operator=(VertexBuffer&& rBuffer)
+    {
+        destroy();
+        rBuffer.transferred = true;
+        alignmentInfo = std::move(rBuffer.alignmentInfo);
+        size = std::move(rBuffer.size);
+        memoryData = std::move(rBuffer.memoryData);
+        buffer = std::move(rBuffer.buffer);
+        bufferUpdatedFence = std::move(rBuffer.bufferUpdatedFence);
+        bufferUpdatedSemaphore = std::move(rBuffer.bufferUpdatedSemaphore);
+        return *this;
     }
 
     void VertexBuffer::init()
@@ -116,6 +159,8 @@ namespace spk
 
     void VertexBuffer::destroy()
     {
+        if(transferred) return;
+        if(buffer.operator VkBuffer() == VK_NULL_HANDLE) return;
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
 
         MemoryManager::getInstance()->freeMemory(memoryData.index);

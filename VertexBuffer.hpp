@@ -51,9 +51,14 @@ namespace spk
     public:
         /* Public interface */
         VertexBuffer();
+        VertexBuffer(const VertexBuffer& vb);
+        VertexBuffer(VertexBuffer&& vb);
         VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize);
         void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize);
         void update(const vk::CommandBuffer& updateCommandBuffer, const void * data);           // TODO: make a staging transmission buffer a class field, make command buffer not one-timesubmit buffer
+        VertexBuffer& operator=(const VertexBuffer& rBuffer);
+        VertexBuffer& operator=(VertexBuffer& rBuffer);
+        VertexBuffer& operator=(VertexBuffer&& rBuffer);
         ~VertexBuffer();
         /* */
 
@@ -67,6 +72,7 @@ namespace spk
         vk::Buffer buffer;
         vk::Fence bufferUpdatedFence;
         vk::Semaphore bufferUpdatedSemaphore;
+        bool transferred = false;
 
         void init();
         void destroy();
