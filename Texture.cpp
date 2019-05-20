@@ -293,10 +293,13 @@ namespace spk
             if(textureReadyFence.operator VkFence() != VK_NULL_HANDLE)                          // ..and it was created properly, delete it
             {
                 logicalDevice.destroyFence(textureReadyFence, nullptr);
-                textureReadyFence = vk::Fence();
+                textureReadyFence = VkFence(0);
                 logicalDevice.destroySemaphore(textureReadySemaphore, nullptr);
+                textureReadySemaphore = VkSemaphore(0);
                 logicalDevice.destroyImageView(view, nullptr);
+                view = VkImageView(0);
                 logicalDevice.destroyImage(image, nullptr);
+                image = VkImage(0);
                 MemoryManager::getInstance()->freeMemory(memoryData.index);
             }
         }

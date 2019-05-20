@@ -156,9 +156,10 @@ namespace spk
             {
                 const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
                 logicalDevice.destroyBuffer(buffer, nullptr);
-                buffer = vk::Buffer();
+                buffer = VkBuffer(0);
                 MemoryManager::getInstance()->freeMemory(memoryData.index);
                 logicalDevice.destroyEvent(bufferReadyEvent, nullptr);
+                bufferReadyEvent = VkEvent(0);
             }
         }
     }
