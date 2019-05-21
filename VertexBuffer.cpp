@@ -5,45 +5,51 @@ namespace spk
 
     VertexBuffer::VertexBuffer(){}
 
-    VertexBuffer::VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize): alignmentInfo(cAlignmentInfo), size(cSize)
+    VertexBuffer::VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize): alignmentInfo(cAlignmentInfo), vertexBufferSize(cVertexBufferSize), indexBufferSize(cIndexBufferSize)
     {
         init();
     }
 
     VertexBuffer::VertexBuffer(const VertexBuffer& vb)
     {
-        create(vb.alignmentInfo, vb.size);
+        create(vb.alignmentInfo, vb.vertexBufferSize, vb.indexBufferSize);
     }
 
     VertexBuffer::VertexBuffer(VertexBuffer&& vb)
     {
         vb.transferred = true;
         alignmentInfo = std::move(vb.alignmentInfo);
-        size = std::move(vb.size);
-        memoryData = std::move(vb.memoryData);
-        buffer = std::move(vb.buffer);
-        bufferUpdatedFence = std::move(vb.bufferUpdatedFence);
-        bufferUpdatedSemaphore = std::move(vb.bufferUpdatedSemaphore);
+        vertexBufferSize = std::move(vb.vertexBufferSize);
+        indexBufferSize = std::move(vb.indexBufferSize);
+        vertexMemoryData = std::move(vb.vertexMemoryData);
+        indexMemoryData = std::move(vb.indexMemoryData);
+        vertexBuffer = std::move(vb.vertexBuffer);
+        indexBuffer = std::move(vb.indexBuffer);
+        vertexBufferUpdatedFence = std::move(vb.vertexBufferUpdatedFence);
+        vertexBufferUpdatedSemaphore = std::move(vb.vertexBufferUpdatedSemaphore);
+        indexBufferUpdatedFence = std::move(vb.indexBufferUpdatedFence);
+        indexBufferUpdatedSemaphore = std::move(vb.indexBufferUpdatedSemaphore);
     }
 
-    void VertexBuffer::create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize)
+    void VertexBuffer::create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize)
     {
         alignmentInfo = cAlignmentInfo;
-        size = cSize;
+        vertexBufferSize = cVertexBufferSize;
+        indexBufferSize = cIndexBufferSize;
         init();
     }
 
     VertexBuffer& VertexBuffer::operator=(const VertexBuffer& rBuffer)
     {
         destroy();
-        create(rBuffer.alignmentInfo, rBuffer.size);
+        create(rBuffer.alignmentInfo, rBuffer.vertexBufferSize, rBuffer.indexBufferSize);
         return *this;
     }
 
     VertexBuffer& VertexBuffer::operator=(VertexBuffer& rBuffer)
     {
         destroy();
-        create(rBuffer.alignmentInfo, rBuffer.size);
+        create(rBuffer.alignmentInfo, rBuffer.vertexBufferSize, rBuffer.indexBufferSize);
         return *this;
     }
 
@@ -52,11 +58,16 @@ namespace spk
         destroy();
         rBuffer.transferred = true;
         alignmentInfo = std::move(rBuffer.alignmentInfo);
-        size = std::move(rBuffer.size);
-        memoryData = std::move(rBuffer.memoryData);
-        buffer = std::move(rBuffer.buffer);
-        bufferUpdatedFence = std::move(rBuffer.bufferUpdatedFence);
-        bufferUpdatedSemaphore = std::move(rBuffer.bufferUpdatedSemaphore);
+        vertexBufferSize = std::move(rBuffer.vertexBufferSize);
+        indexBufferSize = std::move(rBuffer.indexBufferSize);
+        vertexMemoryData = std::move(rBuffer.vertexMemoryData);
+        indexMemoryData = std::move(rBuffer.indexMemoryData);
+        vertexBuffer = std::move(rBuffer.vertexBuffer);
+        indexBuffer = std::move(rBuffer.indexBuffer);
+        vertexBufferUpdatedFence = std::move(rBuffer.vertexBufferUpdatedFence);
+        vertexBufferUpdatedSemaphore = std::move(rBuffer.vertexBufferUpdatedSemaphore);
+        indexBufferUpdatedFence = std::move(rBuffer.indexBufferUpdatedFence);
+        indexBufferUpdatedSemaphore = std::move(rBuffer.indexBufferUpdatedSemaphore);
         return *this;
     }
 
@@ -64,31 +75,63 @@ namespace spk
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
 
-        vk::BufferCreateInfo bufferInfo;
-        bufferInfo.setSize(size);
-        bufferInfo.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
-        bufferInfo.setSharingMode(vk::SharingMode::eExclusive);
-        bufferInfo.setQueueFamilyIndexCount(1);
+        vk::BufferCreateInfo vBufferInfo;
+        vBufferInfo.setSize(vertexBufferSize);
+        vBufferInfo.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+        vBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
+        vBufferInfo.setQueueFamilyIndexCount(1);
         uint32_t queueFamIndex = Executives::getInstance()->getGraphicsQueueFamilyIndex();
-        bufferInfo.setPQueueFamilyIndices(&queueFamIndex);
-        if(logicalDevice.createBuffer(&bufferInfo, nullptr, &buffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create buffer!\n");
+        vBufferInfo.setPQueueFamilyIndices(&queueFamIndex);
+        if(logicalDevice.createBuffer(&vBufferInfo, nullptr, &vertexBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create buffer!\n");
 
-        vk::MemoryRequirements bufferMemoryReq;
-        logicalDevice.getBufferMemoryRequirements(buffer, &bufferMemoryReq);
-        MemoryAllocationInfo allocInfo;
-        allocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
-        allocInfo.size = bufferMemoryReq.size;
-        allocInfo.memoryTypeBits = bufferMemoryReq.memoryTypeBits;
-        memoryData = MemoryManager::getInstance()->allocateMemoryLazy(allocInfo);
+        vk::MemoryRequirements vBufferMemoryReq;
+        logicalDevice.getBufferMemoryRequirements(vertexBuffer, &vBufferMemoryReq);
+        MemoryAllocationInfo vAllocInfo;
+        vAllocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
+        vAllocInfo.size = vBufferMemoryReq.size;
+        vAllocInfo.memoryTypeBits = vBufferMemoryReq.memoryTypeBits;
+        vertexMemoryData = MemoryManager::getInstance()->allocateMemoryLazy(vAllocInfo);
 
         vk::FenceCreateInfo fenceInfo;
-        if(logicalDevice.createFence(&fenceInfo, nullptr, &bufferUpdatedFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
-
+        if(logicalDevice.createFence(&fenceInfo, nullptr, &vertexBufferUpdatedFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
         vk::SemaphoreCreateInfo semaphoreInfo;
-        if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &bufferUpdatedSemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
+        if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &vertexBufferUpdatedSemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
+
+        if(indexBufferSize != 0)
+        {
+            vk::BufferCreateInfo iBufferInfo;
+            iBufferInfo.setSize(indexBufferSize);
+            iBufferInfo.setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+            iBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
+            iBufferInfo.setQueueFamilyIndexCount(1);
+            iBufferInfo.setPQueueFamilyIndices(&queueFamIndex);
+            if(logicalDevice.createBuffer(&iBufferInfo, nullptr, &indexBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create buffer!\n");
+
+            vk::MemoryRequirements iBufferMemoryReq;
+            logicalDevice.getBufferMemoryRequirements(indexBuffer, &iBufferMemoryReq);
+            MemoryAllocationInfo iAllocInfo;
+            iAllocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
+            iAllocInfo.size = iBufferMemoryReq.size;
+            iAllocInfo.memoryTypeBits = iBufferMemoryReq.memoryTypeBits;
+            indexMemoryData = MemoryManager::getInstance()->allocateMemoryLazy(iAllocInfo);
+
+            if(logicalDevice.createFence(&fenceInfo, nullptr, &indexBufferUpdatedFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
+            if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &indexBufferUpdatedSemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
+        }
     }
 
-    void VertexBuffer::update(const vk::CommandBuffer& updateCommandBuffer, const void* data)
+    void VertexBuffer::updateVertexBuffer(const vk::CommandBuffer& updateCommandBuffer, const void* data)
+    {
+        update(updateCommandBuffer, data, true);
+    }
+
+    void VertexBuffer::updateIndexBuffer(const vk::CommandBuffer& updateCommandBuffer, const void* data)
+    {
+        if(indexBufferSize == 0) throw std::runtime_error("Trying to update empty index buffer.\n");
+        update(updateCommandBuffer, data, false);
+    }
+
+    void VertexBuffer::update(const vk::CommandBuffer& updateCommandBuffer, const void* data, bool vertex)
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
@@ -100,7 +143,7 @@ namespace spk
         transmissionBufferInfo.setPQueueFamilyIndices(&index);
         transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
         transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
-        transmissionBufferInfo.setSize(size);
+        transmissionBufferInfo.setSize(vertex ? vertexBufferSize : indexBufferSize);
         if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
 
         vk::MemoryRequirements transmissionBufferMemoryRequirements;
@@ -110,24 +153,24 @@ namespace spk
         allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
         allocInfo.size = transmissionBufferMemoryRequirements.size;
         AllocatedMemoryData transmissionBufferData = MemoryManager::getInstance()->allocateMemory(allocInfo);
-        vk::DeviceMemory& transmissionBufferMemory = MemoryManager::getInstance()->getMemory(transmissionBufferData.index);
+        const vk::DeviceMemory& transmissionBufferMemory = MemoryManager::getInstance()->getMemory(transmissionBufferData.index);
 
         if(logicalDevice.bindBufferMemory(transmissionBuffer, transmissionBufferMemory, transmissionBufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
         void * mappedMemory;
         if(logicalDevice.mapMemory(transmissionBufferMemory, transmissionBufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
-        memcpy(mappedMemory, data, size);
+        memcpy(mappedMemory, data, vertex ? vertexBufferSize : indexBufferSize);
         logicalDevice.unmapMemory(transmissionBufferMemory);
 
         vk::CommandBufferBeginInfo commandBufferInfo;
-        commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);                                     // TODO: make buffer class property
 
         if(updateCommandBuffer.begin(&commandBufferInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
 
         vk::BufferCopy transmissionCopyData;
         transmissionCopyData.setSrcOffset(transmissionBufferData.offset);
-        transmissionCopyData.setDstOffset(memoryData.offset);
-        transmissionCopyData.setSize(size);
-        updateCommandBuffer.copyBuffer(transmissionBuffer, buffer, 1, &transmissionCopyData);
+        transmissionCopyData.setDstOffset(vertex ? vertexMemoryData.offset : indexMemoryData.offset);
+        transmissionCopyData.setSize(vertex ? vertexBufferSize : indexBufferSize);
+        updateCommandBuffer.copyBuffer(transmissionBuffer, vertex ? vertexBuffer : indexBuffer, 1, &transmissionCopyData);
 
         updateCommandBuffer.end();
 
@@ -135,15 +178,15 @@ namespace spk
         submitInfo.setCommandBufferCount(1);
         submitInfo.setPCommandBuffers(&updateCommandBuffer);
         submitInfo.setSignalSemaphoreCount(1);                 
-        submitInfo.setPSignalSemaphores(&bufferUpdatedSemaphore);               
+        submitInfo.setPSignalSemaphores(vertex ? &vertexBufferUpdatedSemaphore : &indexBufferUpdatedSemaphore);
         submitInfo.setWaitSemaphoreCount(0);                   
         submitInfo.setPWaitSemaphores(nullptr);                 
         vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eVertexInput;
         submitInfo.setPWaitDstStageMask(&dstStageFlags);
 
-        graphicsQueue.submit(1, &submitInfo, bufferUpdatedFence);
+        graphicsQueue.submit(1, &submitInfo, vertex ? vertexBufferUpdatedFence : indexBufferUpdatedFence);
 
-        logicalDevice.waitForFences(1, &bufferUpdatedFence, true, ~0U);              //  move the sync operations out of here
+        logicalDevice.waitForFences(1, vertex ? &vertexBufferUpdatedFence : &indexBufferUpdatedFence, true, ~0U);              //  move the sync operations out of here
         if(updateCommandBuffer.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
         MemoryManager::getInstance()->freeMemory(transmissionBufferData.index);
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
@@ -152,24 +195,37 @@ namespace spk
     void VertexBuffer::bindMemory()
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::DeviceMemory& vertexBufferMemory = MemoryManager::getInstance()->getMemory(memoryData.index);
+        const vk::DeviceMemory& vertexBufferMemory = MemoryManager::getInstance()->getMemory(vertexMemoryData.index);
+        const vk::DeviceMemory& indexBufferMemory = MemoryManager::getInstance()->getMemory(indexMemoryData.index);
 
-        if(logicalDevice.bindBufferMemory(buffer, MemoryManager::getInstance()->getMemory(memoryData.index), memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
+        if(logicalDevice.bindBufferMemory(vertexBuffer, MemoryManager::getInstance()->getMemory(vertexMemoryData.index), vertexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
+        if(logicalDevice.bindBufferMemory(indexBuffer, MemoryManager::getInstance()->getMemory(indexMemoryData.index), indexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
     }
 
     void VertexBuffer::destroy()
     {
         if(transferred) return;
-        if(buffer.operator VkBuffer() == VK_NULL_HANDLE) return;
+        if(vertexBuffer.operator VkBuffer() == VK_NULL_HANDLE && indexBuffer.operator VkBuffer() == VK_NULL_HANDLE) return;
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
 
-        MemoryManager::getInstance()->freeMemory(memoryData.index);
-        logicalDevice.destroyBuffer(buffer, nullptr);
-        buffer = VkBuffer(0);
-        logicalDevice.destroyFence(bufferUpdatedFence, nullptr);
-        bufferUpdatedFence = VkFence(0);
-        logicalDevice.destroySemaphore(bufferUpdatedSemaphore, nullptr);
-        bufferUpdatedSemaphore = VkSemaphore(0);
+        MemoryManager::getInstance()->freeMemory(vertexMemoryData.index);
+        logicalDevice.destroyBuffer(vertexBuffer, nullptr);
+        vertexBuffer = VkBuffer(0);
+        logicalDevice.destroyFence(vertexBufferUpdatedFence, nullptr);
+        vertexBufferUpdatedFence = VkFence(0);
+        logicalDevice.destroySemaphore(vertexBufferUpdatedSemaphore, nullptr);
+        vertexBufferUpdatedSemaphore = VkSemaphore(0);
+
+        if(indexBufferSize != 0)
+        {
+            MemoryManager::getInstance()->freeMemory(indexMemoryData.index);
+            logicalDevice.destroyBuffer(indexBuffer, nullptr);
+            indexBuffer = VkBuffer(0);
+            logicalDevice.destroyFence(indexBufferUpdatedFence, nullptr);
+            indexBufferUpdatedFence = VkFence(0);
+            logicalDevice.destroySemaphore(indexBufferUpdatedSemaphore, nullptr);
+            indexBufferUpdatedSemaphore = VkSemaphore(0);
+        }
     }
 
     VertexBuffer::~VertexBuffer()

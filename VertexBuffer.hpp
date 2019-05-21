@@ -53,9 +53,10 @@ namespace spk
         VertexBuffer();
         VertexBuffer(const VertexBuffer& vb);
         VertexBuffer(VertexBuffer&& vb);
-        VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize);
-        void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cSize);
-        void update(const vk::CommandBuffer& updateCommandBuffer, const void * data);           // TODO: make a staging transmission buffer a class field, make command buffer not one-timesubmit buffer
+        VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0);
+        void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0);
+        void updateVertexBuffer(const vk::CommandBuffer& updateCommandBuffer, const void * data);           // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
+        void updateIndexBuffer(const vk::CommandBuffer& updateCommandBuffer, const void * data);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         VertexBuffer& operator=(const VertexBuffer& rBuffer);
         VertexBuffer& operator=(VertexBuffer& rBuffer);
         VertexBuffer& operator=(VertexBuffer&& rBuffer);
@@ -65,16 +66,22 @@ namespace spk
         void bindMemory();
     private:
         //vk::Fence
-        //vl::Semaphore
+        //vk::Semaphore
         VertexAlignmentInfo alignmentInfo;
-        uint32_t size;
-        AllocatedMemoryData memoryData;
-        vk::Buffer buffer;
-        vk::Fence bufferUpdatedFence;
-        vk::Semaphore bufferUpdatedSemaphore;
+        uint32_t vertexBufferSize;
+        uint32_t indexBufferSize;
+        AllocatedMemoryData vertexMemoryData;
+        AllocatedMemoryData indexMemoryData;
+        vk::Buffer vertexBuffer;
+        vk::Buffer indexBuffer;
+        vk::Fence vertexBufferUpdatedFence;
+        vk::Semaphore vertexBufferUpdatedSemaphore;
+        vk::Fence indexBufferUpdatedFence;
+        vk::Semaphore indexBufferUpdatedSemaphore;
         bool transferred = false;
 
         void init();
+        void update(const vk::CommandBuffer& updateCommandBuffer, const void * data, bool vertex);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         void destroy();
     };
 
