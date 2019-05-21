@@ -74,6 +74,7 @@ namespace spk
     void VertexBuffer::init()
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
 
         vk::BufferCreateInfo vBufferInfo;
         vBufferInfo.setSize(vertexBufferSize);
@@ -97,6 +98,12 @@ namespace spk
         vk::SemaphoreCreateInfo semaphoreInfo;
         if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &vertexBufferUpdatedSemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
 
+        vk::CommandBufferAllocateInfo commandInfo;
+        commandInfo.setCommandBufferCount(1);
+        commandInfo.setCommandPool(commandPool);
+        commandInfo.setLevel(vk::CommandBufferLevel::ePrimary);
+        if(logicalDevice.allocateCommandBuffers(&commandInfo, &vertexUpdateCommandBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to allocate command buffer!\n");
+
         if(indexBufferSize != 0)
         {
             vk::BufferCreateInfo iBufferInfo;
@@ -117,24 +124,27 @@ namespace spk
 
             if(logicalDevice.createFence(&fenceInfo, nullptr, &indexBufferUpdatedFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
             if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &indexBufferUpdatedSemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
+
+            if(logicalDevice.allocateCommandBuffers(&commandInfo, &indexUpdateCommandBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to allocate command buffer!\n");
         }
     }
 
-    void VertexBuffer::updateVertexBuffer(const vk::CommandBuffer& updateCommandBuffer, const void* data)
+    void VertexBuffer::updateVertexBuffer(const void* data)
     {
-        update(updateCommandBuffer, data, true);
+        update(data, true);
     }
 
-    void VertexBuffer::updateIndexBuffer(const vk::CommandBuffer& updateCommandBuffer, const void* data)
+    void VertexBuffer::updateIndexBuffer(const void* data)
     {
         if(indexBufferSize == 0) throw std::runtime_error("Trying to update empty index buffer.\n");
-        update(updateCommandBuffer, data, false);
+        update(data, false);
     }
 
-    void VertexBuffer::update(const vk::CommandBuffer& updateCommandBuffer, const void* data, bool vertex)
+    void VertexBuffer::update(const void* data, bool vertex)
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
+        const vk::CommandBuffer& updateCommandBuffer = vertex ? vertexUpdateCommandBuffer : indexUpdateCommandBuffer;
 
         vk::Buffer transmissionBuffer;
         vk::BufferCreateInfo transmissionBufferInfo;
@@ -162,7 +172,7 @@ namespace spk
         logicalDevice.unmapMemory(transmissionBufferMemory);
 
         vk::CommandBufferBeginInfo commandBufferInfo;
-        commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);                                     // TODO: make buffer class property
+        //commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
         if(updateCommandBuffer.begin(&commandBufferInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
 

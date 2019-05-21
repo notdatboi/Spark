@@ -55,8 +55,8 @@ namespace spk
         VertexBuffer(VertexBuffer&& vb);
         VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0);
         void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0);
-        void updateVertexBuffer(const vk::CommandBuffer& updateCommandBuffer, const void * data);           // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
-        void updateIndexBuffer(const vk::CommandBuffer& updateCommandBuffer, const void * data);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
+        void updateVertexBuffer(const void * data);           // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
+        void updateIndexBuffer(const void * data);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         VertexBuffer& operator=(const VertexBuffer& rBuffer);
         VertexBuffer& operator=(VertexBuffer& rBuffer);
         VertexBuffer& operator=(VertexBuffer&& rBuffer);
@@ -78,10 +78,12 @@ namespace spk
         vk::Semaphore vertexBufferUpdatedSemaphore;
         vk::Fence indexBufferUpdatedFence;
         vk::Semaphore indexBufferUpdatedSemaphore;
+        vk::CommandBuffer vertexUpdateCommandBuffer;
+        vk::CommandBuffer indexUpdateCommandBuffer;
         bool transferred = false;
 
         void init();
-        void update(const vk::CommandBuffer& updateCommandBuffer, const void * data, bool vertex);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
+        void update(const void * data, bool vertex);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         void destroy();
     };
 
