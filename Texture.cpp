@@ -12,21 +12,10 @@ namespace spk
         samples = vk::SampleCountFlagBits::e1;
         tiling = vk::ImageTiling::eOptimal;
         usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst;
-        uint32_t presentFamilyIndex = Executives::getInstance()->getPresentQueueFamilyIndex();
         uint32_t graphicsFamilyIndex = Executives::getInstance()->getGraphicsQueueFamilyIndex();
-        if(presentFamilyIndex == graphicsFamilyIndex)
-        {
-            sharingMode = vk::SharingMode::eExclusive;
-            queueFamilyIndexCount = 1;
-            queueFamilyIndices.push_back(graphicsFamilyIndex);
-        }
-        else
-        {
-            sharingMode = vk::SharingMode::eConcurrent;
-            queueFamilyIndexCount = 2;
-            queueFamilyIndices.push_back(graphicsFamilyIndex);
-            queueFamilyIndices.push_back(presentFamilyIndex);
-        }
+        sharingMode = vk::SharingMode::eExclusive;
+        queueFamilyIndexCount = 1;
+        queueFamilyIndices.push_back(graphicsFamilyIndex);
         layout = vk::ImageLayout::eUndefined;
         channelCount = 4;
     }
