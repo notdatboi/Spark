@@ -64,6 +64,11 @@ namespace spk
         /* */
 
         void bindMemory();
+        /* FOR TESTING */
+        const vk::Buffer& getVertexBuffer();
+        const vk::Buffer& getIndexBuffer();
+        const VertexAlignmentInfo& getAlignmentInfo();
+        /* */
     private:
         //vk::Fence
         //vk::Semaphore

@@ -17,6 +17,7 @@ namespace spk
         vk::DeviceSize size;                                                                            // must be integer multiple of memory alignment
         vk::MemoryPropertyFlags flags;
         uint32_t memoryTypeBits;
+        vk::DeviceSize alignment;
     };
 
     struct AllocatedMemoryData
@@ -43,6 +44,7 @@ namespace spk
             vk::DeviceSize size;
             vk::MemoryPropertyFlags flags;
             uint32_t memoryTypeBits;
+            vk::DeviceSize alignment;
         };
 
         MemoryManager();

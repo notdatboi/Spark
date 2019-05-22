@@ -150,6 +150,7 @@ namespace spk
         allocationInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
         allocationInfo.memoryTypeBits = memoryRequirements.memoryTypeBits;
         allocationInfo.size = memoryRequirements.size;
+        allocationInfo.alignment = memoryRequirements.alignment;
         memoryData = MemoryManager::getInstance()->allocateMemoryLazy(allocationInfo);
 
         vk::FenceCreateInfo fenceInfo;
@@ -191,6 +192,7 @@ namespace spk
         allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;         // TODO: make memory property non-coherent
         allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
         allocInfo.size = transmissionBufferMemoryRequirements.size;
+        allocInfo.alignment = transmissionBufferMemoryRequirements.alignment;
         AllocatedMemoryData bufferData = MemoryManager::getInstance()->allocateMemory(allocInfo);
         vk::DeviceMemory& bufferMemory = MemoryManager::getInstance()->getMemory(bufferData.index);
 

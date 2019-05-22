@@ -87,6 +87,7 @@ namespace spk
         info.flags = flags;
         info.size = data.size;
         info.memoryTypeBits = data.memoryTypeBits;
+        info.alignment = data.alignment;
         allocateMemoryBlock(info, data.index);
         auto indexIterator = lazilyAllocatedIndices.find(data.index);
         lazilyAllocatedIndices.erase(indexIterator);
@@ -118,11 +119,11 @@ namespace spk
                 memoryPartitionsCount[index]++;
                 freedIndices.erase(freedIndices.begin());
             }
-            pendingAllocations[sFlags] = {index, allocationInfo.size, allocationInfo.flags, allocationInfo.memoryTypeBits};
+            pendingAllocations[sFlags] = {index, allocationInfo.size, allocationInfo.flags, allocationInfo.memoryTypeBits, allocationInfo.alignment};
         }
         else
         {
-            if(pendingAllocations[sFlags].memoryTypeBits & allocationInfo.memoryTypeBits)
+            if((pendingAllocations[sFlags].memoryTypeBits & allocationInfo.memoryTypeBits) && pendingAllocations[sFlags].alignment == allocationInfo.alignment)
             {
                 offset = pendingAllocations[sFlags].size;
                 pendingAllocations[sFlags].size += allocationInfo.size;
@@ -145,7 +146,7 @@ namespace spk
                     memoryPartitionsCount[index]++;
                     freedIndices.erase(freedIndices.begin());
                 }
-                pendingAllocations[sFlags] = {index, allocationInfo.size, allocationInfo.flags, allocationInfo.memoryTypeBits};
+                pendingAllocations[sFlags] = {index, allocationInfo.size, allocationInfo.flags, allocationInfo.memoryTypeBits, allocationInfo.alignment};
             }
         }
         lazilyAllocatedIndices.insert(index);

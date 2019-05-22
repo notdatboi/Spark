@@ -39,6 +39,21 @@ namespace spk
         init();
     }
 
+    const vk::Buffer& VertexBuffer::getVertexBuffer()
+    {
+        return vertexBuffer;
+    }
+
+    const vk::Buffer& VertexBuffer::getIndexBuffer()
+    {
+        return indexBuffer;
+    }
+
+    const VertexAlignmentInfo& VertexBuffer::getAlignmentInfo()
+    {
+        return alignmentInfo;
+    }
+
     VertexBuffer& VertexBuffer::operator=(const VertexBuffer& rBuffer)
     {
         destroy();
@@ -91,6 +106,7 @@ namespace spk
         vAllocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
         vAllocInfo.size = vBufferMemoryReq.size;
         vAllocInfo.memoryTypeBits = vBufferMemoryReq.memoryTypeBits;
+        vAllocInfo.alignment = vBufferMemoryReq.alignment;
         vertexMemoryData = MemoryManager::getInstance()->allocateMemoryLazy(vAllocInfo);
 
         vk::FenceCreateInfo fenceInfo;
@@ -119,6 +135,7 @@ namespace spk
             MemoryAllocationInfo iAllocInfo;
             iAllocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
             iAllocInfo.size = iBufferMemoryReq.size;
+            iAllocInfo.alignment = iBufferMemoryReq.alignment;
             iAllocInfo.memoryTypeBits = iBufferMemoryReq.memoryTypeBits;
             indexMemoryData = MemoryManager::getInstance()->allocateMemoryLazy(iAllocInfo);
 
@@ -162,6 +179,7 @@ namespace spk
         allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;         // TODO: also make memory property non-coherent
         allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
         allocInfo.size = transmissionBufferMemoryRequirements.size;
+        allocInfo.alignment = transmissionBufferMemoryRequirements.alignment;
         AllocatedMemoryData transmissionBufferData = MemoryManager::getInstance()->allocateMemory(allocInfo);
         const vk::DeviceMemory& transmissionBufferMemory = MemoryManager::getInstance()->getMemory(transmissionBufferData.index);
 

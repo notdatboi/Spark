@@ -114,11 +114,8 @@ namespace spk
         MemoryAllocationInfo allocInfo;
         allocInfo.size = bufferMemoryRequirements.size;
         allocInfo.memoryTypeBits = bufferMemoryRequirements.memoryTypeBits;
-        /*if(deviceLocal)
-        {
-            allocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
-        }
-        else */allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;        // TODO: change host coherency
+        allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;        // TODO: change host coherency
+        allocInfo.alignment = bufferMemoryRequirements.alignment;
         memoryData = MemoryManager::getInstance()->allocateMemoryLazy(allocInfo);
 
         vk::EventCreateInfo eventInfo;
