@@ -224,10 +224,13 @@ namespace spk
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         const vk::DeviceMemory& vertexBufferMemory = MemoryManager::getInstance()->getMemory(vertexMemoryData.index);
-        const vk::DeviceMemory& indexBufferMemory = MemoryManager::getInstance()->getMemory(indexMemoryData.index);
+        if(indexBufferSize != 0)
+        {
+            const vk::DeviceMemory& indexBufferMemory = MemoryManager::getInstance()->getMemory(indexMemoryData.index);
+            if(logicalDevice.bindBufferMemory(indexBuffer, MemoryManager::getInstance()->getMemory(indexMemoryData.index), indexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
+        }
 
         if(logicalDevice.bindBufferMemory(vertexBuffer, MemoryManager::getInstance()->getMemory(vertexMemoryData.index), vertexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
-        if(logicalDevice.bindBufferMemory(indexBuffer, MemoryManager::getInstance()->getMemory(indexMemoryData.index), indexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
     }
 
     void VertexBuffer::destroy()
