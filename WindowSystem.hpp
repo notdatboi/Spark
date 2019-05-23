@@ -3,23 +3,22 @@
 
 #include"SparkIncludeBase.hpp"
 #include<memory>
+#include<string>
 #include"ResourceSet.hpp"
 
 namespace spk
 {
 
-    class WindowSystem
+    class Window
     {
     public:
-        static WindowSystem* getInstance();
-        vk::SurfaceKHR& getSurface();
+        Window(const uint32_t width, const uint32_t height, const std::string& title);
+        Window(const uint32_t width, const uint32_t height, const std::string title);
         const vk::SurfaceKHR& getSurface() const;
         GLFWwindow* getWindow();
         void destroy();
+        ~Window();
     private:
-        WindowSystem();
-
-        static std::unique_ptr<WindowSystem> windowSystemInstance;
         GLFWwindow* window;
         vk::SurfaceKHR surface;
     };

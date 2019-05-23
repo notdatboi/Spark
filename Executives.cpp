@@ -12,22 +12,13 @@ namespace spk
         uint32_t queueFamilyPropertyCount;
         const vk::PhysicalDevice& physicalDevice = System::getInstance()->getPhysicalDevice();
         physicalDevice.getQueueFamilyProperties(&queueFamilyPropertyCount, nullptr);
-        std::vector<vk::QueueFamilyProperties> queueFamilyProperties(queueFamilyPropertyCount);
+        queueFamilyProperties.resize(queueFamilyPropertyCount);
         physicalDevice.getQueueFamilyProperties(&queueFamilyPropertyCount, queueFamilyProperties.data());
 
         uint32_t i = 0;
-        vk::Bool32 presentSupport = false;
         bool graphicsSupport = false;
         for(auto& properties : queueFamilyProperties)
         {
-            if(!presentSupport)
-            {
-                if(physicalDevice.getSurfaceSupportKHR(i, WindowSystem::getInstance()->getSurface(), &presentSupport) != vk::Result::eSuccess)
-                {
-                    throw std::runtime_error("Failed to get surface support!\n");
-                }
-                if(presentSupport) presentQueueFamilyIndex = i;
-            }
             if(!graphicsSupport && (properties.queueFlags & vk::QueueFlagBits::eGraphics))
             {
                 graphicsQueueFamilyIndex = i;
@@ -35,29 +26,57 @@ namespace spk
             }
             ++i;
         }
-        if(!(graphicsSupport && presentSupport)) throw std::runtime_error("Failed to pick graphics or present queue!\n");
+        if(!graphicsSupport) throw std::runtime_error("Failed to pick graphics queue!\n");
+    }
+    
+    std::pair<uint32_t, const vk::Queue&> Executives::getPresentQueue(const vk::SurfaceKHR& surface) const
+    {
+        const vk::PhysicalDevice& physicalDevice = System::getInstance()->getPhysicalDevice();
+        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        vk::Bool32 presentSupport;
+        uint32_t i = 0;
+        for(auto& properties : queueFamilyProperties)
+        {
+            if(!presentSupport)
+            {
+                if(physicalDevice.getSurfaceSupportKHR(i, surface, &presentSupport) != vk::Result::eSuccess)
+                {
+                    throw std::runtime_error("Failed to get surface support!\n");
+                }
+                if(presentSupport)
+                {
+                    if(presentQueues.count(i) == 0)
+                    {
+                        presentQueues[i] = vk::Queue();
+                        logicalDevice.getQueue(i, 0, &presentQueues[i]);
+                    }
+                    return {i, presentQueues[i]};
+                }
+            }
+            ++i;
+        }
+        throw std::runtime_error("No queues support this surface!\n");
     }
 
     Executives* Executives::getInstance()
     {
         static bool created = false;
-        static bool queuesObtained = false;
+        static bool graphicsQueueObtained = false;
         if(!created)
         {
             executivesInstance.reset(new Executives());
             created = true;
             return executivesInstance.get();
         }
-        if(!queuesObtained)
+        if(!graphicsQueueObtained)
         {
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
             if(logicalDevice.operator VkDevice() == VK_NULL_HANDLE)
             {
                 return executivesInstance.get();
             }
-            queuesObtained = true;
+            graphicsQueueObtained = true;
             logicalDevice.getQueue(executivesInstance->graphicsQueueFamilyIndex, 0, &executivesInstance->graphicsQueue);
-            logicalDevice.getQueue(executivesInstance->presentQueueFamilyIndex, 0, &executivesInstance->presentQueue);
             executivesInstance->createPool();
         }
         return executivesInstance.get();
@@ -68,37 +87,12 @@ namespace spk
         return graphicsQueueFamilyIndex;
     }
 
-    const uint32_t Executives::getPresentQueueFamilyIndex() const
-    {
-        return presentQueueFamilyIndex;
-    }
-
     const vk::Queue& Executives::getGraphicsQueue() const
     {
         return graphicsQueue;
     }
 
-    const vk::Queue& Executives::getPresentQueue() const
-    {
-        return presentQueue;
-    }
-
-    vk::Queue& Executives::getGraphicsQueue()
-    {
-        return graphicsQueue;
-    }
-
-    vk::Queue& Executives::getPresentQueue()
-    {
-        return presentQueue;
-    }
-
     const vk::CommandPool& Executives::getPool() const
-    {
-        return pool;
-    }
-
-    vk::CommandPool& Executives::getPool()
     {
         return pool;
     }

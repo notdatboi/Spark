@@ -50,7 +50,6 @@ namespace spk
             systemInstance.reset(new System());
             created = true;
             systemInstance->createInstance();
-            WindowSystem::getInstance();
             systemInstance->createPhysicalDevice();
             Executives::getInstance();
             systemInstance->createLogicalDevice();
@@ -154,31 +153,23 @@ namespace spk
         std::vector<const char *> deviceExtensions = getDeviceExtensions();
         logicalDeviceCreateInfo.setEnabledExtensionCount(deviceExtensions.size());
         logicalDeviceCreateInfo.setPpEnabledExtensionNames(deviceExtensions.data());
-        uint32_t presentQueueFamilyIndex = Executives::getInstance()->getPresentQueueFamilyIndex();
-        uint32_t graphicsQueueFamilyIndex = Executives::getInstance()->getGraphicsQueueFamilyIndex();
+
+        uint32_t queueFamPropCount;
+        physicalDevice.getQueueFamilyProperties(&queueFamPropCount, nullptr);
+        std::vector<vk::QueueFamilyProperties> props(queueFamPropCount);
+        physicalDevice.getQueueFamilyProperties(&queueFamPropCount, props.data());
+        
         const float priorities[] = {0.5};
-        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-        if(presentQueueFamilyIndex == graphicsQueueFamilyIndex)
+        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos(props.size());
+        for(int i = 0; i < props.size(); ++i)
         {
-            logicalDeviceCreateInfo.setQueueCreateInfoCount(1);
-            vk::DeviceQueueCreateInfo queueCreateInfo;
-            queueCreateInfo.setQueueFamilyIndex(presentQueueFamilyIndex);
-            queueCreateInfo.setQueueCount(1);
-            queueCreateInfo.setPQueuePriorities(priorities);
-            queueCreateInfos.push_back(queueCreateInfo);
+            queueCreateInfos[i].setQueueFamilyIndex(i);
+            queueCreateInfos[i].setQueueCount(1);
+            queueCreateInfos[i].setPQueuePriorities(priorities);
         }
-        else
-        {
-            logicalDeviceCreateInfo.setQueueCreateInfoCount(2);
-            queueCreateInfos = std::vector<vk::DeviceQueueCreateInfo>(2);
-            queueCreateInfos[0].setQueueFamilyIndex(graphicsQueueFamilyIndex);
-            queueCreateInfos[1].setQueueFamilyIndex(presentQueueFamilyIndex);
-            queueCreateInfos[0].setQueueCount(1);
-            queueCreateInfos[1].setQueueCount(1);
-            queueCreateInfos[0].setPQueuePriorities(priorities);
-            queueCreateInfos[1].setPQueuePriorities(priorities);
-        }
+        logicalDeviceCreateInfo.setQueueCreateInfoCount(queueCreateInfos.size());
         logicalDeviceCreateInfo.setPQueueCreateInfos(queueCreateInfos.data());
+
         vk::PhysicalDeviceFeatures deviceFeatures;
         // deviceFeatures.setGeometryShader(true);
         deviceFeatures.setTessellationShader(true);
@@ -222,7 +213,6 @@ namespace spk
     {
         spk::Executives::getInstance()->destroy();
         spk::MemoryManager::getInstance()->destroy();
-        spk::WindowSystem::getInstance()->destroy();
         if(enableValidation)
         {
             instance.destroyDebugUtilsMessengerEXT(debugMessenger, nullptr, loader);
