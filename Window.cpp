@@ -18,6 +18,8 @@ namespace spk
             throw std::runtime_error("Failed to create window surface!\n");
         }
         surface = tmpSurface;
+
+        presentQueue = Executives::getInstance()->getPresentQueue(surface);
     }
 
     Window::Window(const uint32_t width, const uint32_t height, const std::string title)
@@ -33,6 +35,11 @@ namespace spk
     GLFWwindow* Window::getWindow()
     {
         return window;
+    }
+
+    std::pair<uint32_t, const vk::Queue*> Window::getPresentQueue()
+    {
+        return presentQueue;
     }
 
     void Window::destroy()

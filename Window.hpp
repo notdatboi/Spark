@@ -15,13 +15,16 @@ namespace spk
         Window();
         void create(const uint32_t width, const uint32_t height, const std::string title);
         Window(const uint32_t width, const uint32_t height, const std::string title);
-        const vk::SurfaceKHR& getSurface() const;
-        GLFWwindow* getWindow();
         void destroy();
         ~Window();
+
+        const vk::SurfaceKHR& getSurface() const;
+        GLFWwindow* getWindow();
+        std::pair<uint32_t, const vk::Queue*> getPresentQueue();
     private:
         GLFWwindow* window;
         vk::SurfaceKHR surface;
+        std::pair<uint32_t, const vk::Queue*> presentQueue;
     };
 
 }

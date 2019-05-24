@@ -3,6 +3,7 @@
 
 #include"SparkIncludeBase.hpp"
 #include<memory>
+#include<vector>
 #include<map>
 
 namespace spk
@@ -15,7 +16,7 @@ namespace spk
         const uint32_t getGraphicsQueueFamilyIndex() const;
         const vk::Queue& getGraphicsQueue() const;
         const vk::CommandPool& getPool() const;
-        std::pair<uint32_t, const vk::Queue&> getPresentQueue(const vk::SurfaceKHR& surface) const;
+        std::pair<uint32_t, const vk::Queue*> getPresentQueue(const vk::SurfaceKHR& surface);
         void destroy();
     private:
         Executives();

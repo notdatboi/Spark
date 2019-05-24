@@ -28,7 +28,7 @@ namespace spk
         if(!graphicsSupport) throw std::runtime_error("Failed to pick graphics queue!\n");
     }
     
-    std::pair<uint32_t, const vk::Queue&> Executives::getPresentQueue(const vk::SurfaceKHR& surface) const
+    std::pair<uint32_t, const vk::Queue*> Executives::getPresentQueue(const vk::SurfaceKHR& surface)
     {
         const vk::PhysicalDevice& physicalDevice = System::getInstance()->getPhysicalDevice();
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
@@ -49,7 +49,7 @@ namespace spk
                         presentQueues[i] = vk::Queue();
                         logicalDevice.getQueue(i, 0, &presentQueues[i]);
                     }
-                    return {i, presentQueues[i]};
+                    return {i, &presentQueues[i]};
                 }
             }
             ++i;
