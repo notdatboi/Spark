@@ -10,3 +10,5 @@ In development
 ```spk::UniformBuffer``` class is used for storing and processing uniform buffers
 
 ```spk::ResouceSet``` class is final combination of 2 previous classes that can be fetched in shader
+
+```spk::VertexBuffer``` class is a combination of vertex and index buffers to fetch vertices from shaders
