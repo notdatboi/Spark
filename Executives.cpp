@@ -32,7 +32,7 @@ namespace spk
     {
         const vk::PhysicalDevice& physicalDevice = System::getInstance()->getPhysicalDevice();
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        vk::Bool32 presentSupport;
+        vk::Bool32 presentSupport = false;
         uint32_t i = 0;
         for(auto& properties : queueFamilyProperties)
         {
@@ -46,7 +46,6 @@ namespace spk
                 {
                     if(presentQueues.count(i) == 0)
                     {
-                        presentQueues[i] = vk::Queue();
                         logicalDevice.getQueue(i, 0, &presentQueues[i]);
                     }
                     return {i, &presentQueues[i]};

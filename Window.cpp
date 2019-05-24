@@ -9,7 +9,7 @@ namespace spk
     void Window::create(const uint32_t width, const uint32_t height, const std::string title)
     {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+        window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), title.c_str(), nullptr, nullptr);
 
         vk::Instance& instance = System::getInstance()->getvkInstance();
         VkSurfaceKHR tmpSurface;

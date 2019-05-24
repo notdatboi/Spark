@@ -13,6 +13,7 @@ namespace spk
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         shaderModules.resize(shaders.size());
+        shaderStages.resize(shaders.size());
         for(int i = 0; i < shaders.size(); ++i)
         {
             vk::ShaderModuleCreateInfo info;
@@ -32,6 +33,18 @@ namespace spk
                     break;
             }
         }
+        for(int i = 0; i < shaderModules.size(); ++i)
+        {
+            shaderStages[i].setModule(shaderModules[i].first);
+            shaderStages[i].setStage(shaderModules[i].second);
+            shaderStages[i].setPName("main");
+            shaderStages[i].setPSpecializationInfo(nullptr);
+        }
+    }
+
+    const std::vector<vk::PipelineShaderStageCreateInfo>& ShaderSet::getShaderStages() const
+    {
+        return shaderStages;
     }
 
     std::vector<char> ShaderSet::getCode(const std::string& filename) const
@@ -44,11 +57,6 @@ namespace spk
         fin.read(code.data(), size);
         fin.close();
         return code;
-    }
-
-    const std::vector<std::pair<vk::ShaderModule, vk::ShaderStageFlags> >& ShaderSet::getShaderModules() const
-    {
-        return shaderModules;
     }
 
     ShaderSet::~ShaderSet()
