@@ -1,6 +1,5 @@
 #include"Executives.hpp"
 #include"System.hpp"
-#include"WindowSystem.hpp"
 
 namespace spk
 {

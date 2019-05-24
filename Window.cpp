@@ -1,4 +1,4 @@
-#include"WindowSystem.hpp"
+#include"Window.hpp"
 #include"System.hpp"
 
 namespace spk
