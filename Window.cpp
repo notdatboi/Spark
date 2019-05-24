@@ -4,7 +4,9 @@
 namespace spk
 {
 
-    Window::Window(const uint32_t width, const uint32_t height, const std::string& title)
+    Window::Window(){}
+
+    void Window::create(const uint32_t width, const uint32_t height, const std::string title)
     {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
@@ -20,16 +22,7 @@ namespace spk
 
     Window::Window(const uint32_t width, const uint32_t height, const std::string title)
     {
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-
-        vk::Instance& instance = System::getInstance()->getvkInstance();
-        VkSurfaceKHR tmpSurface;
-        if(glfwCreateWindowSurface(instance, window, nullptr, &tmpSurface) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create window surface!\n");
-        }
-        surface = tmpSurface;
+        create(width, height, title);
     }
     
     const vk::SurfaceKHR& Window::getSurface() const

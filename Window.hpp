@@ -12,7 +12,8 @@ namespace spk
     class Window
     {
     public:
-        Window(const uint32_t width, const uint32_t height, const std::string& title);
+        Window();
+        void create(const uint32_t width, const uint32_t height, const std::string title);
         Window(const uint32_t width, const uint32_t height, const std::string title);
         const vk::SurfaceKHR& getSurface() const;
         GLFWwindow* getWindow();
