@@ -25,6 +25,7 @@ namespace spk
     {
     public:
         ShaderSet();
+        ShaderSet(const ShaderSet& set);
         ShaderSet(const std::vector<ShaderInfo>& shaders);
         void create(const std::vector<ShaderInfo>& shaders);
         ShaderSet& operator=(const ShaderSet& set);

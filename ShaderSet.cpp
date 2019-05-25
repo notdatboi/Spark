@@ -4,6 +4,11 @@ namespace spk
 {
     ShaderSet::ShaderSet(){}
 
+    ShaderSet::ShaderSet(const ShaderSet& set)
+    {
+        create(set.infos);
+    }
+
     ShaderSet::ShaderSet(const std::vector<ShaderInfo>& shaders)
     {
         create(shaders);
