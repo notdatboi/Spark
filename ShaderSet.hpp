@@ -27,11 +27,13 @@ namespace spk
         ShaderSet();
         ShaderSet(const std::vector<ShaderInfo>& shaders);
         void create(const std::vector<ShaderInfo>& shaders);
+        ShaderSet& operator=(const ShaderSet& set);
+        void destroy();
         ~ShaderSet();
 
         const std::vector<vk::PipelineShaderStageCreateInfo>& getShaderStages() const;
     private:
-
+        std::vector<ShaderInfo> infos;
         std::vector<char> getCode(const std::string& filename) const;
         std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
         std::vector<std::pair<vk::ShaderModule, vk::ShaderStageFlagBits> > shaderModules;

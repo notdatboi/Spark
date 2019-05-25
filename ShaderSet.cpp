@@ -9,9 +9,17 @@ namespace spk
         create(shaders);
     }
 
+    ShaderSet& ShaderSet::operator=(const ShaderSet& set)
+    {
+        destroy();
+        create(set.infos);
+        return *this;
+    }
+
     void ShaderSet::create(const std::vector<ShaderInfo>& shaders)
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        infos = shaders;
         shaderModules.resize(shaders.size());
         shaderStages.resize(shaders.size());
         for(int i = 0; i < shaders.size(); ++i)
@@ -59,12 +67,20 @@ namespace spk
         return code;
     }
 
+    void ShaderSet::destroy()
+    {
+        if(shaderModules.size() != 0 && shaderModules[0].first)
+        {
+            for(auto& module : shaderModules)
+            {
+                const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+                logicalDevice.destroyShaderModule(module.first, nullptr);
+            }
+        }
+    }
+
     ShaderSet::~ShaderSet()
     {
-        for(auto& module : shaderModules)
-        {
-            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-            logicalDevice.destroyShaderModule(module.first, nullptr);
-        }
+        destroy();
     }
 }
