@@ -5,6 +5,7 @@
 #include<memory>
 #include<string>
 #include"ResourceSet.hpp"
+#include"ShaderSet.hpp"
 
 namespace spk
 {
@@ -13,8 +14,8 @@ namespace spk
     {
     public:
         Window();
-        void create(const uint32_t width, const uint32_t height, const std::string title);
-        Window(const uint32_t width, const uint32_t height, const std::string title);
+        void create(const uint32_t cWidth, const uint32_t cHeight, const std::string title);
+        Window(const uint32_t cWidth, const uint32_t cHeight, const std::string title);
         void destroy();
         ~Window();
 
@@ -25,6 +26,19 @@ namespace spk
         GLFWwindow* window;
         vk::SurfaceKHR surface;
         std::pair<uint32_t, const vk::Queue*> presentQueue;
+        vk::SwapchainKHR swapchain;
+        std::vector<vk::Image> swapchainImages;
+        std::vector<vk::ImageView> swapchainImageViews;
+        vk::RenderPass renderPass;
+        vk::SurfaceFormatKHR surfaceFormat;
+        std::vector<vk::Framebuffer> framebuffers;
+
+        uint32_t width;
+        uint32_t height;
+
+        void createSwapchain();
+        void createRenderPass();
+        void createFramebuffers();
     };
 
 }
