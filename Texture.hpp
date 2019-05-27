@@ -48,7 +48,8 @@ namespace spk
         const vk::ImageView& getImageView() const;
         vk::ImageView& getImageView();
         const vk::ImageLayout& getLayout() const;
-        void bindMemory(const vk::CommandBuffer& memoryBindBuffer);
+        void bindMemory();
+        void update(const void* rawData);
         const vk::Fence& getReadyFence() const;
         const uint32_t getSet() const;
         const uint32_t getBinding() const;
@@ -60,6 +61,8 @@ namespace spk
         vk::Fence textureReadyFence;
         vk::Semaphore textureReadySemaphore;
         std::vector<unsigned char> rawImageData;
+        vk::CommandBuffer updateCommandBuffer;
+
         uint32_t binding;
         uint32_t setIndex;
         bool transferred = false;

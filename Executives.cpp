@@ -22,6 +22,7 @@ namespace spk
             {
                 graphicsQueueFamilyIndex = i;
                 graphicsSupport = true;
+                break;
             }
             ++i;
         }

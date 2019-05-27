@@ -57,10 +57,13 @@ namespace spk
 
     void ResourceSet::update(const uint32_t set, const uint32_t binding, const void* data)
     {
-        if(setContainmentData[set].bindings[binding].second) throw std::runtime_error("You can't change textures.\n");
+        uint32_t index = setContainmentData[set].bindings[binding].first;                   // TODO: implement CPU thread synchronization
+        if(setContainmentData[set].bindings[binding].second)
+        {
+            textures[index].update(data);
+        }
         else
         {
-            uint32_t index = setContainmentData[set].bindings[binding].first;                   // TODO: implement CPU thread synchronization
             uniformBuffers[index].update(data);
         }
     }
@@ -74,7 +77,6 @@ namespace spk
         cbAllocInfo.setCommandBufferCount(1);
         cbAllocInfo.setLevel(vk::CommandBufferLevel::ePrimary);
         cbAllocInfo.setCommandPool(commandPool);
-        if(logicalDevice.allocateCommandBuffers(&cbAllocInfo, &initialCommandBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to allocate command buffer!\n");
 
         vk::SamplerCreateInfo samplerInfo;
         samplerInfo.setMagFilter(vk::Filter::eLinear);
@@ -153,7 +155,7 @@ namespace spk
     {
         for(auto& texture : textures)
         {
-            texture.bindMemory(initialCommandBuffer);
+            texture.bindMemory();
         }
     }
 
@@ -281,7 +283,6 @@ namespace spk
         {
             const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
             const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
-            logicalDevice.freeCommandBuffers(commandPool, 1, &initialCommandBuffer);
             for(auto& layout : descriptorLayouts)
             {
                 logicalDevice.destroyDescriptorSetLayout(layout, nullptr);

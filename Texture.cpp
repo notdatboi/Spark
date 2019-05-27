@@ -131,6 +131,7 @@ namespace spk
     void Texture::init()
     {
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
         vk::ImageCreateInfo info = imageInfo;
         if(logicalDevice.createImage(&info, nullptr, &image) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image!\n");
         vk::MemoryRequirements memoryRequirements;
@@ -147,6 +148,12 @@ namespace spk
 
         vk::SemaphoreCreateInfo semaphoreInfo;
         if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &textureReadySemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
+        
+        vk::CommandBufferAllocateInfo commandInfo;
+        commandInfo.setCommandBufferCount(1);
+        commandInfo.setCommandPool(commandPool);
+        commandInfo.setLevel(vk::CommandBufferLevel::ePrimary);
+        if(logicalDevice.allocateCommandBuffers(&commandInfo, &updateCommandBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to allocate command buffer!\n");
     }
 
     const vk::ImageView& Texture::getImageView() const 
@@ -159,12 +166,45 @@ namespace spk
         return view;
     }
 
-    void Texture::bindMemory(const vk::CommandBuffer& memoryBindBuffer)
+    void Texture::bindMemory()
     {
         const vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(memoryData.index);
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
+
+        vk::SubmitInfo submitInfo;
+        submitInfo.setCommandBufferCount(0);
+        submitInfo.setPCommandBuffers(nullptr);
+        submitInfo.setSignalSemaphoreCount(1);
+        submitInfo.setPSignalSemaphores(&textureReadySemaphore);
+        vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eTopOfPipe;
+        submitInfo.setPWaitDstStageMask(&dstStageFlags);
+        graphicsQueue.submit(1, &submitInfo, textureReadyFence);
+
         if(logicalDevice.bindImageMemory(image, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory to the texture!\n");
 
+        update(rawImageData.data());
+
+        vk::ImageSubresourceRange range;
+        range.setAspectMask(vk::ImageAspectFlagBits::eColor);
+        range.setLayerCount(1);
+        range.setBaseArrayLayer(0);
+        range.setLevelCount(1);
+        range.setBaseMipLevel(0);
+
+        vk::ImageViewCreateInfo viewInfo;
+        viewInfo.setImage(image);
+        viewInfo.setViewType(vk::ImageViewType::e2D);
+        viewInfo.setFormat(imageInfo.format);
+        viewInfo.setComponents(vk::ComponentMapping());
+        viewInfo.setSubresourceRange(range);
+        if(logicalDevice.createImageView(&viewInfo, nullptr, &view) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image view!\n");
+    }
+
+    void Texture::update(const void* rawData)
+    {
+        memcpy(rawImageData.data(), rawData, rawImageData.size());
+        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
         vk::Buffer transmissionBuffer;
         vk::BufferCreateInfo transmissionBufferInfo;
         transmissionBufferInfo.setQueueFamilyIndexCount(1);
@@ -191,10 +231,15 @@ namespace spk
         memcpy(mappedMemory, rawImageData.data(), transmissionBufferInfo.size);
         logicalDevice.unmapMemory(bufferMemory);
 
+        logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here (if it is needed)
+        if(logicalDevice.resetFences(1, &textureReadyFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset fence!\n");
+
+        if(updateCommandBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
+
         vk::CommandBufferBeginInfo commandBufferInfo;
         commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-        if(memoryBindBuffer.begin(&commandBufferInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
+        if(updateCommandBuffer.begin(&commandBufferInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
 
         vk::ImageSubresourceRange subresourceRange;
         subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor);
@@ -213,7 +258,7 @@ namespace spk
         imageInitialBarrier.setNewLayout(vk::ImageLayout::eTransferDstOptimal);
         imageInfo.layout = vk::ImageLayout::eTransferDstOptimal;
         imageInitialBarrier.setSubresourceRange(subresourceRange);
-        memoryBindBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(), 
+        updateCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(), 
             0, nullptr,
             0, nullptr,
             1, &imageInitialBarrier);
@@ -231,7 +276,7 @@ namespace spk
         copyInfo.setImageExtent(imageInfo.extent);
         copyInfo.setImageOffset(vk::Offset3D());
         copyInfo.setImageSubresource(subresource);
-        memoryBindBuffer.copyBufferToImage(transmissionBuffer, image, imageInfo.layout, 1, &copyInfo);
+        updateCommandBuffer.copyBufferToImage(transmissionBuffer, image, imageInfo.layout, 1, &copyInfo);
 
         vk::ImageMemoryBarrier imageBarrier;
         imageBarrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
@@ -243,45 +288,30 @@ namespace spk
         imageBarrier.setNewLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
         imageInfo.layout = vk::ImageLayout::eShaderReadOnlyOptimal;
         imageBarrier.setSubresourceRange(subresourceRange);
-        memoryBindBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexShader, vk::DependencyFlags(), 
+        updateCommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eVertexShader, vk::DependencyFlags(), 
             0, nullptr,
             0, nullptr,
             1, &imageBarrier);
         
-        memoryBindBuffer.end();
+        updateCommandBuffer.end();
 
         const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
         vk::SubmitInfo submitInfo;
         submitInfo.setCommandBufferCount(1);
-        submitInfo.setPCommandBuffers(&memoryBindBuffer);
+        submitInfo.setPCommandBuffers(&updateCommandBuffer);
         submitInfo.setSignalSemaphoreCount(1);                  // recheck later
         submitInfo.setPSignalSemaphores(&textureReadySemaphore);               // too
-        submitInfo.setWaitSemaphoreCount(0);                    // too
-        submitInfo.setPWaitSemaphores(nullptr);                 // too
-        vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eTopOfPipe;
+        submitInfo.setWaitSemaphoreCount(1);                    // too
+        submitInfo.setPWaitSemaphores(&textureReadySemaphore);                 // too
+        vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eVertexShader;
         submitInfo.setPWaitDstStageMask(&dstStageFlags);
 
         graphicsQueue.submit(1, &submitInfo, textureReadyFence);
 
         logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here (if it is needed)
-        if(memoryBindBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
+
         MemoryManager::getInstance()->freeMemory(bufferData.index);
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
-
-        vk::ImageSubresourceRange range;
-        range.setAspectMask(vk::ImageAspectFlagBits::eColor);
-        range.setLayerCount(1);
-        range.setBaseArrayLayer(0);
-        range.setLevelCount(1);
-        range.setBaseMipLevel(0);
-
-        vk::ImageViewCreateInfo viewInfo;
-        viewInfo.setImage(image);
-        viewInfo.setViewType(vk::ImageViewType::e2D);
-        viewInfo.setFormat(imageInfo.format);
-        viewInfo.setComponents(vk::ComponentMapping());
-        viewInfo.setSubresourceRange(range);
-        if(logicalDevice.createImageView(&viewInfo, nullptr, &view) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image view!\n");
     }
 
     void Texture::destroy()

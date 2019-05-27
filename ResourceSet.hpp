@@ -33,7 +33,6 @@ namespace spk
         const uint32_t getIdentifier() const;
         /* */
     private:
-        vk::CommandBuffer initialCommandBuffer;
         std::vector<Texture> textures;
         std::vector<UniformBuffer> uniformBuffers;
         vk::DescriptorPool descriptorPool;
