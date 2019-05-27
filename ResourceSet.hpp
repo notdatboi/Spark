@@ -20,6 +20,8 @@ namespace spk
         /* Public interface */
         ResourceSet();
         ResourceSet(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers);
+        ResourceSet(const ResourceSet& set);
+        ResourceSet& operator=(const ResourceSet& set);
         void create(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers);
         void update(const uint32_t set, const uint32_t binding, const void* data);
         ~ResourceSet();
@@ -28,6 +30,7 @@ namespace spk
         /* FOR TESTING */
         const vk::PipelineLayout& getPipelineLayout() const;
         const std::vector<vk::DescriptorSet>& getDescriptorSets() const;
+        const uint32_t getIdentifier() const;
         /* */
     private:
         vk::CommandBuffer initialCommandBuffer;
@@ -39,6 +42,8 @@ namespace spk
         std::vector<vk::DescriptorSet> descriptorSets;
         std::vector<vk::DescriptorSetLayout> descriptorLayouts;
         vk::PipelineLayout pipelineLayout;
+        static uint32_t count;
+        uint32_t identifier;
 
         void init();
         void bindTextureMemory();
@@ -47,6 +52,7 @@ namespace spk
         void createDescriptorLayouts();
         void allocateDescriptorSets();
         void writeDescriptorData();
+        void destroy();
     };
 
 }

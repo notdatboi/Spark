@@ -64,6 +64,7 @@ namespace spk
         /* */
 
         void bindMemory();
+        const uint32_t getIdentifier() const;
         /* FOR TESTING */
         const vk::Buffer& getVertexBuffer();
         const vk::Buffer& getIndexBuffer();
@@ -85,6 +86,8 @@ namespace spk
         vk::Semaphore indexBufferUpdatedSemaphore;
         vk::CommandBuffer vertexUpdateCommandBuffer;
         vk::CommandBuffer indexUpdateCommandBuffer;
+        static uint32_t count;
+        uint32_t identifier;
         bool transferred = false;
 
         void init();

@@ -2,22 +2,36 @@
 
 namespace spk
 {
-    ShaderSet::ShaderSet(){}
+    uint32_t ShaderSet::count = 0;
 
-    ShaderSet::ShaderSet(const ShaderSet& set)
+    ShaderSet::ShaderSet(): identifier(count)
     {
-        create(set.infos);
+        ++count;
     }
 
-    ShaderSet::ShaderSet(const std::vector<ShaderInfo>& shaders)
+    ShaderSet::ShaderSet(const ShaderSet& set): identifier(count)
+    {
+        create(set.infos);
+        ++count;
+    }
+
+    ShaderSet::ShaderSet(const std::vector<ShaderInfo>& shaders): identifier(count)
     {
         create(shaders);
+        ++count;
+    }
+
+    const uint32_t ShaderSet::getIdentifier() const
+    {
+        return identifier;
     }
 
     ShaderSet& ShaderSet::operator=(const ShaderSet& set)
     {
         destroy();
         create(set.infos);
+        identifier = count;
+        ++count;
         return *this;
     }
 

@@ -2,20 +2,27 @@
 
 namespace spk
 {
+    uint32_t VertexBuffer::count = 0;
 
-    VertexBuffer::VertexBuffer(){}
+    VertexBuffer::VertexBuffer(): identifier(count) {++count;}
 
-    VertexBuffer::VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize): alignmentInfo(cAlignmentInfo), vertexBufferSize(cVertexBufferSize), indexBufferSize(cIndexBufferSize)
+    VertexBuffer::VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize): 
+        alignmentInfo(cAlignmentInfo), 
+        vertexBufferSize(cVertexBufferSize), 
+        indexBufferSize(cIndexBufferSize),
+        identifier(count)
     {
         init();
+        ++count;
     }
 
-    VertexBuffer::VertexBuffer(const VertexBuffer& vb)
+    VertexBuffer::VertexBuffer(const VertexBuffer& vb): identifier(count)
     {
+        ++count;
         create(vb.alignmentInfo, vb.vertexBufferSize, vb.indexBufferSize);
     }
 
-    VertexBuffer::VertexBuffer(VertexBuffer&& vb)
+    VertexBuffer::VertexBuffer(VertexBuffer&& vb): identifier(vb.identifier)
     {
         vb.transferred = true;
         alignmentInfo = std::move(vb.alignmentInfo);
@@ -33,10 +40,17 @@ namespace spk
 
     void VertexBuffer::create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize)
     {
+        identifier = count;
+        ++count;
         alignmentInfo = cAlignmentInfo;
         vertexBufferSize = cVertexBufferSize;
         indexBufferSize = cIndexBufferSize;
         init();
+    }
+
+    const uint32_t VertexBuffer::getIdentifier() const
+    {
+        return identifier;
     }
 
     const vk::Buffer& VertexBuffer::getVertexBuffer()
@@ -58,6 +72,8 @@ namespace spk
     {
         destroy();
         create(rBuffer.alignmentInfo, rBuffer.vertexBufferSize, rBuffer.indexBufferSize);
+        identifier = count;
+        ++count;
         return *this;
     }
 
@@ -65,12 +81,15 @@ namespace spk
     {
         destroy();
         create(rBuffer.alignmentInfo, rBuffer.vertexBufferSize, rBuffer.indexBufferSize);
+        identifier = count;
+        ++count;
         return *this;
     }
 
     VertexBuffer& VertexBuffer::operator=(VertexBuffer&& rBuffer)
     {
         destroy();
+        identifier = rBuffer.identifier;
         rBuffer.transferred = true;
         alignmentInfo = std::move(rBuffer.alignmentInfo);
         vertexBufferSize = std::move(rBuffer.vertexBufferSize);

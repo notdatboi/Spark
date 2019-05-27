@@ -2,14 +2,40 @@
 
 namespace spk
 {
+    uint32_t ResourceSet::count = 0;
 
-    ResourceSet::ResourceSet(){}
+    ResourceSet::ResourceSet(): identifier(count)
+    {
+        ++count;
+    }
+
+    ResourceSet::ResourceSet(const ResourceSet& set): 
+        identifier(count),
+        textures(set.textures),
+        uniformBuffers(set.uniformBuffers)
+    {
+        init();
+        ++count;
+    }
+
+    ResourceSet& ResourceSet::operator=(const ResourceSet& set)
+    {
+        destroy();
+        identifier = count;
+        ++count;
+        textures = set.textures;
+        uniformBuffers = set.uniformBuffers;
+        init();
+        return *this;
+    }
 
     ResourceSet::ResourceSet(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers): 
+        identifier(count),
         textures(cTextures), 
         uniformBuffers(cUniformBuffers)
     {
         init();
+        ++count;
     }
 
     void ResourceSet::create(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers)
@@ -23,6 +49,11 @@ namespace spk
     const vk::PipelineLayout& ResourceSet::getPipelineLayout() const {return pipelineLayout;}
     const std::vector<vk::DescriptorSet>& ResourceSet::getDescriptorSets() const {return descriptorSets;}
     /* */
+
+    const uint32_t ResourceSet::getIdentifier() const
+    {
+        return identifier;
+    }
 
     void ResourceSet::update(const uint32_t set, const uint32_t binding, const void* data)
     {
@@ -244,18 +275,27 @@ namespace spk
         logicalDevice.updateDescriptorSets(setWrites.size(), setWrites.data(), 0, nullptr);
     }
 
+    void ResourceSet::destroy()
+    {
+        if(pipelineLayout)
+        {
+            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+            const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
+            logicalDevice.freeCommandBuffers(commandPool, 1, &initialCommandBuffer);
+            for(auto& layout : descriptorLayouts)
+            {
+                logicalDevice.destroyDescriptorSetLayout(layout, nullptr);
+            }
+            logicalDevice.destroyPipelineLayout(pipelineLayout, nullptr);
+            pipelineLayout = vk::PipelineLayout();
+            logicalDevice.destroyDescriptorPool(descriptorPool, nullptr);
+            logicalDevice.destroySampler(uniqueSampler, nullptr);
+        }
+    }
+
     ResourceSet::~ResourceSet()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
-        logicalDevice.freeCommandBuffers(commandPool, 1, &initialCommandBuffer);
-        for(auto& layout : descriptorLayouts)
-        {
-            logicalDevice.destroyDescriptorSetLayout(layout, nullptr);
-        }
-        logicalDevice.destroyPipelineLayout(pipelineLayout, nullptr);
-        logicalDevice.destroyDescriptorPool(descriptorPool, nullptr);
-        logicalDevice.destroySampler(uniqueSampler, nullptr);
+        destroy();
     }
 
 }
