@@ -63,7 +63,7 @@ namespace spk
         return indexBuffer;
     }
 
-    const VertexAlignmentInfo& VertexBuffer::getAlignmentInfo()
+    const VertexAlignmentInfo& VertexBuffer::getAlignmentInfo() const
     {
         return alignmentInfo;
     }

@@ -68,7 +68,7 @@ namespace spk
         /* FOR TESTING */
         const vk::Buffer& getVertexBuffer();
         const vk::Buffer& getIndexBuffer();
-        const VertexAlignmentInfo& getAlignmentInfo();
+        const VertexAlignmentInfo& getAlignmentInfo() const;
         /* */
     private:
         //vk::Fence
