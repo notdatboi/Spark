@@ -67,6 +67,15 @@ namespace spk
         binding = std::move(rTexture.binding);
         return *this;
     }
+    const vk::Semaphore* Texture::getSemaphore() const
+    {
+        return &textureReadySemaphore;
+    }
+
+    const vk::Fence* Texture::getFence() const
+    {
+        return &textureReadyFence;
+    }
 
     void Texture::resetSetIndex(const uint32_t newIndex)
     {

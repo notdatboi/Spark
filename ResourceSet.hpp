@@ -31,12 +31,16 @@ namespace spk
         const vk::PipelineLayout& getPipelineLayout() const;
         const std::vector<vk::DescriptorSet>& getDescriptorSets() const;
         const uint32_t getIdentifier() const;
+        const std::vector<const vk::Semaphore*>& getTextureSemaphores() const;
+        const std::vector<const vk::Fence*>& getTextureFences() const;
         /* */
     private:
         std::vector<Texture> textures;
         std::vector<UniformBuffer> uniformBuffers;
         vk::DescriptorPool descriptorPool;
         vk::Sampler uniqueSampler;
+        std::vector<const vk::Semaphore*> textureSemaphores;
+        std::vector<const vk::Fence*> textureFences;
         std::map<uint32_t, ResourceSetContainmentInfo> setContainmentData; // [setIndex]: {bindings}
         std::vector<vk::DescriptorSet> descriptorSets;
         std::vector<vk::DescriptorSetLayout> descriptorLayouts;

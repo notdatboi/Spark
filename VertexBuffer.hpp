@@ -66,9 +66,15 @@ namespace spk
         void bindMemory();
         const uint32_t getIdentifier() const;
         /* FOR TESTING */
-        const vk::Buffer& getVertexBuffer();
-        const vk::Buffer& getIndexBuffer();
+        const vk::Buffer& getVertexBuffer() const;
+        const vk::Buffer& getIndexBuffer() const;
         const VertexAlignmentInfo& getAlignmentInfo() const;
+        const uint32_t getVertexBufferSize() const;
+        const uint32_t getIndexBufferSize() const;
+        const vk::Fence* getIndexBufferFence() const;
+        const vk::Fence* getVertexBufferFence() const;
+        const vk::Semaphore* getIndexBufferSemaphore() const;
+        const vk::Semaphore* getVertexBufferSemaphore() const;
         /* */
     private:
         //vk::Fence

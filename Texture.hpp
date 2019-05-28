@@ -50,7 +50,8 @@ namespace spk
         const vk::ImageLayout& getLayout() const;
         void bindMemory();
         void update(const void* rawData);
-        const vk::Fence& getReadyFence() const;
+        const vk::Semaphore* getSemaphore() const;
+        const vk::Fence* getFence() const;
         const uint32_t getSet() const;
         const uint32_t getBinding() const;
     private:

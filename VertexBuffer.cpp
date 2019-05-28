@@ -53,14 +53,44 @@ namespace spk
         return identifier;
     }
 
-    const vk::Buffer& VertexBuffer::getVertexBuffer()
+    const vk::Buffer& VertexBuffer::getVertexBuffer() const 
     {
         return vertexBuffer;
     }
 
-    const vk::Buffer& VertexBuffer::getIndexBuffer()
+    const vk::Buffer& VertexBuffer::getIndexBuffer() const
     {
         return indexBuffer;
+    }
+
+    const uint32_t VertexBuffer::getVertexBufferSize() const
+    {
+        return vertexBufferSize;
+    }
+
+    const uint32_t VertexBuffer::getIndexBufferSize() const
+    {
+        return indexBufferSize;
+    }
+
+    const vk::Fence* VertexBuffer::getIndexBufferFence() const
+    {
+        return &indexBufferUpdatedFence;
+    }
+
+    const vk::Fence* VertexBuffer::getVertexBufferFence() const
+    {
+        return &vertexBufferUpdatedFence;
+    }
+
+    const vk::Semaphore* VertexBuffer::getIndexBufferSemaphore() const
+    {
+        return &indexBufferUpdatedSemaphore;
+    }
+
+    const vk::Semaphore* VertexBuffer::getVertexBufferSemaphore() const
+    {
+        return &vertexBufferUpdatedSemaphore;
     }
 
     const VertexAlignmentInfo& VertexBuffer::getAlignmentInfo() const
