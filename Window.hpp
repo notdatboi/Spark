@@ -24,7 +24,7 @@ namespace spk
         ~Window();
 
         const vk::SurfaceKHR& getSurface() const;
-        GLFWwindow* getWindow();
+        GLFWwindow* getGLFWWindow();
         std::pair<uint32_t, const vk::Queue*> getPresentQueue();
     private:
         struct DrawComponents
@@ -44,9 +44,13 @@ namespace spk
         vk::SurfaceFormatKHR surfaceFormat;
         std::vector<vk::Framebuffer> framebuffers;
         std::vector<vk::CommandBuffer> frameCommandBuffers;
-        vk::CommandPool presentCommandPool;
         std::map<std::tuple<uint32_t, uint32_t, uint32_t>, DrawComponents> drawComponents;
         std::vector<vk::CommandBuffer> presentCommandBuffers;
+        std::tuple<uint32_t, uint32_t, uint32_t> currentPipeline;
+        vk::Fence safeToRenderFence;
+        vk::Fence safeToPresentFence;
+        vk::Semaphore safeToRenderSemaphore;
+        vk::Semaphore safeToPresentSemaphore;
 
         uint32_t width;
         uint32_t height;
@@ -54,9 +58,9 @@ namespace spk
         void createSwapchain();
         void createRenderPass();
         void createFramebuffers();
-        void createPresentCommandPool();
         void createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const VertexAlignmentInfo& vertexAlignmentInfo, const vk::PipelineLayout& layout);
-        //void rewriteCommandBuffers(/*vk::Pipeline newBoundPipeline*/);
+        void createCommandBuffers();
+        void initCommandBuffers(DrawComponents& drawComponents);
     };
 
 }

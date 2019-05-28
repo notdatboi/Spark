@@ -265,8 +265,8 @@ namespace spk
 
         logicalDevice.waitForFences(1, vertex ? &vertexBufferUpdatedFence : &indexBufferUpdatedFence, true, ~0U);              //  move the sync operations out of here
         if(updateCommandBuffer.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
-        MemoryManager::getInstance()->freeMemory(transmissionBufferData.index);
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
+        MemoryManager::getInstance()->freeMemory(transmissionBufferData.index);
     }
 
     void VertexBuffer::bindMemory()
@@ -288,8 +288,8 @@ namespace spk
         if(vertexBuffer.operator VkBuffer() == VK_NULL_HANDLE && indexBuffer.operator VkBuffer() == VK_NULL_HANDLE) return;
         const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
 
-        MemoryManager::getInstance()->freeMemory(vertexMemoryData.index);
         logicalDevice.destroyBuffer(vertexBuffer, nullptr);
+        MemoryManager::getInstance()->freeMemory(vertexMemoryData.index);
         vertexBuffer = VkBuffer(0);
         logicalDevice.destroyFence(vertexBufferUpdatedFence, nullptr);
         vertexBufferUpdatedFence = VkFence(0);
@@ -298,8 +298,8 @@ namespace spk
 
         if(indexBufferSize != 0)
         {
-            MemoryManager::getInstance()->freeMemory(indexMemoryData.index);
             logicalDevice.destroyBuffer(indexBuffer, nullptr);
+            MemoryManager::getInstance()->freeMemory(indexMemoryData.index);
             indexBuffer = VkBuffer(0);
             logicalDevice.destroyFence(indexBufferUpdatedFence, nullptr);
             indexBufferUpdatedFence = VkFence(0);

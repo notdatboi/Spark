@@ -319,8 +319,8 @@ namespace spk
 
         logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here (if it is needed)
 
-        MemoryManager::getInstance()->freeMemory(bufferData.index);
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
+        MemoryManager::getInstance()->freeMemory(bufferData.index);
     }
 
     void Texture::destroy()

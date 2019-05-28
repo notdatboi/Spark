@@ -5,6 +5,21 @@
 namespace spk
 {
 
+    void yeet(const std::string error)
+    {
+        throw std::runtime_error(error.c_str());
+    }
+
+    void System::init()
+    {
+        getInstance();
+    }
+
+    void System::deinit()
+    {
+        getInstance()->destroy();
+    }
+
     System::System()
     {
         glfwInit();

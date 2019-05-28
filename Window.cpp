@@ -8,11 +8,20 @@ namespace spk
 
     void Window::create(const uint32_t cWidth, const uint32_t cHeight, const std::string title)
     {
+        currentPipeline = {~uint32_t(0), ~uint32_t(0), ~uint32_t(0)};
         width = cWidth;
         height = cHeight;
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), title.c_str(), nullptr, nullptr);
+
+        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        vk::SemaphoreCreateInfo semaphoreInfo;
+        logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &safeToPresentSemaphore);
+        logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &safeToRenderSemaphore);
+        vk::FenceCreateInfo fenceInfo;
+        logicalDevice.createFence(&fenceInfo, nullptr, &safeToRenderFence);
+        logicalDevice.createFence(&fenceInfo, nullptr, &safeToPresentFence);
 
         vk::Instance& instance = System::getInstance()->getvkInstance();
         VkSurfaceKHR tmpSurface;
@@ -23,8 +32,8 @@ namespace spk
         surface = tmpSurface;
 
         presentQueue = Executives::getInstance()->getPresentQueue(surface);
-        createPresentCommandPool();
         createSwapchain();
+        createCommandBuffers();
         createRenderPass();
         createFramebuffers();
     }
@@ -39,7 +48,7 @@ namespace spk
         return surface;
     }
 
-    GLFWwindow* Window::getWindow()
+    GLFWwindow* Window::getGLFWWindow()
     {
         return window;
     }
@@ -51,11 +60,115 @@ namespace spk
 
     void Window::draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders)
     {
+        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
         std::tuple<uint32_t, uint32_t, uint32_t> key = {resources->getIdentifier(), vertexBuffer->getIdentifier(), shaders->getIdentifier()};
         if(drawComponents.count(key) == 0)
         {
             drawComponents[key] = {vk::Pipeline(), resources, vertexBuffer, shaders};
             createPipeline(drawComponents[key].pipeline, shaders->getShaderStages(), vertexBuffer->getAlignmentInfo(), resources->getPipelineLayout());
+        }
+        if(currentPipeline != key)
+        {
+            graphicsQueue.waitIdle();
+            currentPipeline = key;
+            if(frameCommandBuffers[0])
+            {
+                for(auto& cb : frameCommandBuffers)
+                {
+                    cb.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+                }
+            }
+            initCommandBuffers(drawComponents[key]);
+        }
+        uint32_t imageIndex;
+        if(logicalDevice.acquireNextImageKHR(swapchain, ~0U, safeToRenderSemaphore, safeToRenderFence, &imageIndex) != vk::Result::eSuccess) throw std::runtime_error("Failed to acquire image!\n");
+
+        vk::PipelineStageFlags renderStageFlags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        vk::SubmitInfo renderSubmit;
+        renderSubmit.setCommandBufferCount(1);
+        renderSubmit.setPCommandBuffers(&frameCommandBuffers[imageIndex]);
+        renderSubmit.setSignalSemaphoreCount(1);
+        renderSubmit.setPSignalSemaphores(&safeToPresentSemaphore);
+        renderSubmit.setWaitSemaphoreCount(1);
+        renderSubmit.setPWaitSemaphores(&safeToRenderSemaphore);
+        renderSubmit.setPWaitDstStageMask(&renderStageFlags);
+
+        if(logicalDevice.waitForFences(1, &safeToRenderFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
+
+        if(graphicsQueue.submit(1, &renderSubmit, safeToPresentFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to submit queue!\n");
+
+        vk::Result presentationResult;
+        vk::PresentInfoKHR presentInfo;
+        presentInfo.setWaitSemaphoreCount(1);
+        presentInfo.setPWaitSemaphores(&safeToPresentSemaphore);
+        presentInfo.setSwapchainCount(1);
+        presentInfo.setPSwapchains(&swapchain);
+        presentInfo.setPImageIndices(&imageIndex);
+        presentInfo.setPResults(&presentationResult);
+
+        if(logicalDevice.waitForFences(1, &safeToPresentFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
+
+        presentQueue.second->presentKHR(&presentInfo);
+        if(presentationResult != vk::Result::eSuccess) throw std::runtime_error("Failed to perform presentation!\n");
+
+        logicalDevice.resetFences(1, &safeToRenderFence);
+        logicalDevice.resetFences(1, &safeToPresentFence);
+    }
+
+    void Window::initCommandBuffers(DrawComponents& drawComponents)
+    {
+        const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
+        int i = 0;
+        for(auto& commandBuffer : frameCommandBuffers)
+        {
+            vk::CommandBufferBeginInfo beginInfo;
+            if(commandBuffer.begin(&beginInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
+
+            commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawComponents.pipeline);
+
+            vk::ClearValue clear;
+            vk::ClearColorValue clearColorValue;
+            vk::ClearDepthStencilValue clearDSValue;
+            clearColorValue.setUint32({0, 0, 0, 0});
+            clear.setColor(clearColorValue);
+            clearDSValue.setDepth(0);
+            clearDSValue.setStencil(0);
+            clear.setDepthStencil(clearDSValue);
+
+            vk::RenderPassBeginInfo renderPassInfo;
+            renderPassInfo.setRenderPass(renderPass);
+            renderPassInfo.setFramebuffer(framebuffers[i]);
+            renderPassInfo.setRenderArea(vk::Rect2D({0, 0}, {width, height}));
+            renderPassInfo.setClearValueCount(1);
+            renderPassInfo.setPClearValues(&clear);
+            commandBuffer.beginRenderPass(&renderPassInfo, vk::SubpassContents());
+
+            vk::DeviceSize offset = 0;
+            const vk::Buffer& vb = drawComponents.vertices->getVertexBuffer();
+            const uint32_t vbSize = drawComponents.vertices->getVertexBufferSize();
+            const uint32_t ibSize = drawComponents.vertices->getIndexBufferSize();
+            const VertexAlignmentInfo alignmentInfo = drawComponents.vertices->getAlignmentInfo();
+            commandBuffer.bindVertexBuffers(alignmentInfo.binding, 1, &vb, &offset);
+            if(ibSize != 0)
+            {
+                const vk::Buffer& ib = drawComponents.vertices->getIndexBuffer();
+                commandBuffer.bindIndexBuffer(ib, offset, vk::IndexType::eUint32);
+            }
+            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, drawComponents.resources->getPipelineLayout(), 0, drawComponents.resources->getDescriptorSets().size(), drawComponents.resources->getDescriptorSets().data(), 0, nullptr);
+
+            if(ibSize != 0)
+            {
+                commandBuffer.drawIndexed(ibSize / 4, 1, 0, 0, 0);
+            }
+            else
+            {
+                commandBuffer.draw(vbSize / alignmentInfo.structSize, 1, 0, 0);
+            }
+
+            commandBuffer.endRenderPass();
+            commandBuffer.end();
+            ++i;
         }
     }
 
@@ -335,22 +448,47 @@ namespace spk
         }
     }
 
-    void Window::createPresentCommandPool()
+    void Window::createCommandBuffers()
     {
-        const vk::Device& logicalDevice = spk::System::getInstance()->getLogicalDevice();
-        vk::CommandPoolCreateInfo info;
-        info.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
-        info.setQueueFamilyIndex(presentQueue.first);
-        if(logicalDevice.createCommandPool(&info, nullptr, &presentCommandPool) != vk::Result::eSuccess) throw std::runtime_error("Failed to create command pool!\n");
+        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::CommandPool& pool = Executives::getInstance()->getPool();
+        frameCommandBuffers.resize(swapchainImages.size());
+        vk::CommandBufferAllocateInfo allocInfo;
+        allocInfo.setCommandBufferCount(frameCommandBuffers.size());
+        allocInfo.setCommandPool(pool);
+        allocInfo.setLevel(vk::CommandBufferLevel::ePrimary);
+        logicalDevice.allocateCommandBuffers(&allocInfo, frameCommandBuffers.data());
     }
 
     void Window::destroy()
     {
-        const auto& instance = System::getInstance()->getvkInstance();
-        const vk::Device& logicalDevice = spk::System::getInstance()->getLogicalDevice();
-        logicalDevice.destroyCommandPool(presentCommandPool, nullptr);
-        instance.destroySurfaceKHR(surface, nullptr);
-        glfwDestroyWindow(window);
+        if(safeToPresentSemaphore)
+        {
+            const auto& instance = System::getInstance()->getvkInstance();
+            const vk::Device& logicalDevice = spk::System::getInstance()->getLogicalDevice();
+            logicalDevice.waitIdle();
+            logicalDevice.destroySemaphore(safeToPresentSemaphore, nullptr);
+            safeToPresentSemaphore = vk::Semaphore();
+            logicalDevice.destroySemaphore(safeToRenderSemaphore, nullptr);
+            logicalDevice.destroyFence(safeToPresentFence, nullptr);
+            logicalDevice.destroyFence(safeToRenderFence, nullptr);
+            for(auto& fb : framebuffers)
+            {
+                logicalDevice.destroyFramebuffer(fb, nullptr);
+            }
+            for(auto& component : drawComponents)
+            {
+                logicalDevice.destroyPipeline(component.second.pipeline, nullptr);
+            }
+            logicalDevice.destroyRenderPass(renderPass, nullptr);
+            for(vk::ImageView& view : swapchainImageViews)
+            {
+                logicalDevice.destroyImageView(view, nullptr);
+            }
+            logicalDevice.destroySwapchainKHR(swapchain, nullptr);
+            instance.destroySurfaceKHR(surface, nullptr);
+            glfwDestroyWindow(window);
+        }
     }
 
     Window::~Window()

@@ -20,12 +20,11 @@ namespace spk
     {
     public:
         /* Public interface */
-        static System* getInstance();
+        static void init();
+        static void deinit();
         /* */
 
-        //operator vk::Instance() const;
-        //operator vk::PhysicalDevice() const;
-        //operator vk::Device() const;
+        static System* getInstance();
         vk::Instance& getvkInstance();
         vk::Device& getLogicalDevice();
         vk::PhysicalDevice& getPhysicalDevice();
@@ -51,6 +50,7 @@ namespace spk
         vk::DebugUtilsMessengerEXT debugMessenger;
     };
 
+    void yeet(const std::string error);
 }
 
 #endif
