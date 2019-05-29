@@ -37,7 +37,7 @@ namespace spk
 
     void ShaderSet::create(const std::vector<ShaderInfo>& shaders)
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         infos = shaders;
         shaderModules.resize(shaders.size());
         shaderStages.resize(shaders.size());
@@ -92,7 +92,7 @@ namespace spk
         {
             for(auto& module : shaderModules)
             {
-                const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+                const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
                 logicalDevice.destroyShaderModule(module.first, nullptr);
             }
         }

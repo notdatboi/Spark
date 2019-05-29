@@ -36,7 +36,7 @@ namespace spk
     private:
         vk::Buffer buffer;
         size_t size;
-        AllocatedMemoryData memoryData;
+        system::AllocatedMemoryData memoryData;
         //bool deviceLocal;
         vk::Event bufferReadyEvent;
         uint32_t setIndex;

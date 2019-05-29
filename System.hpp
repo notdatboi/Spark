@@ -9,48 +9,48 @@
 
 namespace spk
 {
-
-    #ifdef DEBUG
-    const bool enableValidation = true;
-    #else
-    const bool enableValidation = false;
-    #endif
-
-    class System
+    namespace system
     {
-    public:
-        /* Public interface */
-        static void init();
-        static void deinit();
-        /* */
+        #ifdef DEBUG
+        const bool enableValidation = true;
+        #else
+        const bool enableValidation = false;
+        #endif
 
-        static System* getInstance();
-        vk::Instance& getvkInstance();
-        vk::Device& getLogicalDevice();
-        vk::PhysicalDevice& getPhysicalDevice();
-        const vk::Instance& getvkInstance() const;
-        const vk::Device& getLogicalDevice() const;
-        const vk::PhysicalDevice& getPhysicalDevice() const;
-        void destroy();
-    private:
-        System();
-        std::vector<const char*> getInstanceExtensions() const;
-        std::vector<const char*> getDeviceExtensions() const;
-        std::vector<const char*> getInstanceLayers() const;
-        void createInstance();
-        void createPhysicalDevice();
-        void createLogicalDevice();
-        static VKAPI_ATTR VkBool32 VKAPI_CALL callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+        void init();
+        void deinit();
 
-        static std::unique_ptr<System> systemInstance;
-        vk::Instance instance;
-        vk::PhysicalDevice physicalDevice;
-        vk::Device logicalDevice;
-        vk::DispatchLoaderDynamic loader;
-        vk::DebugUtilsMessengerEXT debugMessenger;
-    };
+        class System
+        {
+        public:
+            static System* getInstance();
+            vk::Instance& getvkInstance();
+            vk::Device& getLogicalDevice();
+            vk::PhysicalDevice& getPhysicalDevice();
+            const vk::Instance& getvkInstance() const;
+            const vk::Device& getLogicalDevice() const;
+            const vk::PhysicalDevice& getPhysicalDevice() const;
+            void destroy();
+        private:
+            System();
+            std::vector<const char*> getInstanceExtensions() const;
+            std::vector<const char*> getDeviceExtensions() const;
+            std::vector<const char*> getInstanceLayers() const;
+            void createInstance();
+            void createPhysicalDevice();
+            void createLogicalDevice();
+            static VKAPI_ATTR VkBool32 VKAPI_CALL callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
-    void yeet(const std::string error);
+            static std::unique_ptr<System> systemInstance;
+            vk::Instance instance;
+            vk::PhysicalDevice physicalDevice;
+            vk::Device logicalDevice;
+            vk::DispatchLoaderDynamic loader;
+            vk::DebugUtilsMessengerEXT debugMessenger;
+        };
+
+        void yeet(const std::string error);
+    }
 }
 
 #endif

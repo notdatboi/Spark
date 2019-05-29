@@ -56,7 +56,7 @@ namespace spk
         const uint32_t getBinding() const;
     private:
         ImageInfo imageInfo;
-        AllocatedMemoryData memoryData;
+        system::AllocatedMemoryData memoryData;
         vk::Image image;
         vk::ImageView view;
         vk::Fence textureReadyFence;

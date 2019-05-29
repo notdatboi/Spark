@@ -12,7 +12,7 @@ namespace spk
         samples = vk::SampleCountFlagBits::e1;
         tiling = vk::ImageTiling::eOptimal;
         usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst;
-        uint32_t graphicsFamilyIndex = Executives::getInstance()->getGraphicsQueueFamilyIndex();
+        uint32_t graphicsFamilyIndex = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
         sharingMode = vk::SharingMode::eExclusive;
         queueFamilyIndexCount = 1;
         queueFamilyIndices.push_back(graphicsFamilyIndex);
@@ -139,18 +139,18 @@ namespace spk
 
     void Texture::init()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        const vk::CommandPool& commandPool = system::Executives::getInstance()->getPool();
         vk::ImageCreateInfo info = imageInfo;
         if(logicalDevice.createImage(&info, nullptr, &image) != vk::Result::eSuccess) throw std::runtime_error("Failed to create image!\n");
         vk::MemoryRequirements memoryRequirements;
         logicalDevice.getImageMemoryRequirements(image, &memoryRequirements);
-        MemoryAllocationInfo allocationInfo;
+        system::MemoryAllocationInfo allocationInfo;
         allocationInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
         allocationInfo.memoryTypeBits = memoryRequirements.memoryTypeBits;
         allocationInfo.size = memoryRequirements.size;
         allocationInfo.alignment = memoryRequirements.alignment;
-        memoryData = MemoryManager::getInstance()->allocateMemoryLazy(allocationInfo);
+        memoryData = system::MemoryManager::getInstance()->allocateMemoryLazy(allocationInfo);
 
         vk::FenceCreateInfo fenceInfo;
         if(logicalDevice.createFence(&fenceInfo, nullptr, &textureReadyFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
@@ -177,9 +177,9 @@ namespace spk
 
     void Texture::bindMemory()
     {
-        const vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(memoryData.index);
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
+        const vk::DeviceMemory& memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        const vk::Queue& graphicsQueue = system::Executives::getInstance()->getGraphicsQueue();
 
         vk::SubmitInfo submitInfo;
         submitInfo.setCommandBufferCount(0);
@@ -213,11 +213,11 @@ namespace spk
     void Texture::update(const void* rawData)
     {
         memcpy(rawImageData.data(), rawData, rawImageData.size());
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         vk::Buffer transmissionBuffer;
         vk::BufferCreateInfo transmissionBufferInfo;
         transmissionBufferInfo.setQueueFamilyIndexCount(1);
-        uint32_t index = Executives::getInstance()->getGraphicsQueueFamilyIndex();
+        uint32_t index = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
         transmissionBufferInfo.setPQueueFamilyIndices(&index);
         transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
         transmissionBufferInfo.setSize(imageInfo.extent.width * imageInfo.extent.height * imageInfo.channelCount);
@@ -226,13 +226,13 @@ namespace spk
 
         vk::MemoryRequirements transmissionBufferMemoryRequirements;
         logicalDevice.getBufferMemoryRequirements(transmissionBuffer, &transmissionBufferMemoryRequirements);
-        MemoryAllocationInfo allocInfo;
+        system::MemoryAllocationInfo allocInfo;
         allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;         // TODO: make memory property non-coherent
         allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
         allocInfo.size = transmissionBufferMemoryRequirements.size;
         allocInfo.alignment = transmissionBufferMemoryRequirements.alignment;
-        AllocatedMemoryData bufferData = MemoryManager::getInstance()->allocateMemory(allocInfo);
-        vk::DeviceMemory& bufferMemory = MemoryManager::getInstance()->getMemory(bufferData.index);
+        system::AllocatedMemoryData bufferData = system::MemoryManager::getInstance()->allocateMemory(allocInfo);
+        vk::DeviceMemory& bufferMemory = system::MemoryManager::getInstance()->getMemory(bufferData.index);
 
         if(logicalDevice.bindBufferMemory(transmissionBuffer, bufferMemory, bufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
         void * mappedMemory;
@@ -304,7 +304,7 @@ namespace spk
         
         updateCommandBuffer.end();
 
-        const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
+        const vk::Queue& graphicsQueue = system::Executives::getInstance()->getGraphicsQueue();
         vk::SubmitInfo submitInfo;
         submitInfo.setCommandBufferCount(1);
         submitInfo.setPCommandBuffers(&updateCommandBuffer);
@@ -320,14 +320,14 @@ namespace spk
         logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here (if it is needed)
 
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
-        MemoryManager::getInstance()->freeMemory(bufferData.index);
+        system::MemoryManager::getInstance()->freeMemory(bufferData.index);
     }
 
     void Texture::destroy()
     {
         if(!transferred)                                                                        // If the texture wasn't moved to another texture..
         {
-            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+            const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
             if(textureReadyFence.operator VkFence() != VK_NULL_HANDLE)                          // ..and it was created properly, delete it
             {
                 logicalDevice.destroyFence(textureReadyFence, nullptr);
@@ -338,7 +338,7 @@ namespace spk
                 view = VkImageView(0);
                 logicalDevice.destroyImage(image, nullptr);
                 image = VkImage(0);
-                MemoryManager::getInstance()->freeMemory(memoryData.index);
+                system::MemoryManager::getInstance()->freeMemory(memoryData.index);
             }
         }
     }

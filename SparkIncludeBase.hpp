@@ -8,6 +8,4 @@
 #include<GLFW/glfw3.h>
 #include<stdexcept>
 
-//#define DEBUG
-
 #endif

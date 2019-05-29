@@ -85,8 +85,8 @@ namespace spk
 
     void ResourceSet::init()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        const vk::CommandPool& commandPool = system::Executives::getInstance()->getPool();
 
         textureSemaphores.resize(textures.size());
         textureFences.resize(textures.size());
@@ -192,7 +192,7 @@ namespace spk
 
     void ResourceSet::createDescriptorPool()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
 
         vk::DescriptorPoolSize textureSize;
         textureSize.setType(vk::DescriptorType::eCombinedImageSampler);
@@ -213,7 +213,7 @@ namespace spk
 
     void ResourceSet::createDescriptorLayouts()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         descriptorLayouts.resize(setContainmentData.size());
         size_t setIndex = 0;
         for(auto& set : setContainmentData)
@@ -248,7 +248,7 @@ namespace spk
 
     void ResourceSet::allocateDescriptorSets()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         descriptorSets.resize(descriptorLayouts.size());
         vk::DescriptorSetAllocateInfo info;
         info.setDescriptorPool(descriptorPool);
@@ -259,7 +259,7 @@ namespace spk
 
     void ResourceSet::writeDescriptorData()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         std::vector<vk::WriteDescriptorSet> setWrites;
         std::vector<vk::DescriptorImageInfo> imgInfos;
         std::vector<vk::DescriptorBufferInfo> bufInfos;
@@ -304,8 +304,8 @@ namespace spk
     {
         if(pipelineLayout)
         {
-            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-            const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
+            const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+            const vk::CommandPool& commandPool = system::Executives::getInstance()->getPool();
             for(auto& layout : descriptorLayouts)
             {
                 logicalDevice.destroyDescriptorSetLayout(layout, nullptr);

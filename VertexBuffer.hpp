@@ -80,8 +80,8 @@ namespace spk
         VertexAlignmentInfo alignmentInfo;
         uint32_t vertexBufferSize;
         uint32_t indexBufferSize;
-        AllocatedMemoryData vertexMemoryData;
-        AllocatedMemoryData indexMemoryData;
+        system::AllocatedMemoryData vertexMemoryData;
+        system::AllocatedMemoryData indexMemoryData;
         vk::Buffer vertexBuffer;
         vk::Buffer indexBuffer;
         vk::Fence vertexBufferUpdatedFence;

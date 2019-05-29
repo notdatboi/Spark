@@ -98,10 +98,10 @@ namespace spk
         binding = cBinding;
     //    rawBufferData = rawData;
         //deviceLocal = cDeviceLocal;
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         vk::BufferCreateInfo createInfo;
         createInfo.setQueueFamilyIndexCount(1);
-        uint32_t graphicsFamilyIndex = Executives::getInstance()->getGraphicsQueueFamilyIndex();
+        uint32_t graphicsFamilyIndex = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
         createInfo.setPQueueFamilyIndices(&graphicsFamilyIndex);
         createInfo.setSharingMode(vk::SharingMode::eExclusive);
         createInfo.setSize(cSize);
@@ -111,12 +111,12 @@ namespace spk
         if(logicalDevice.createBuffer(&createInfo, nullptr, &buffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create uniform buffer!\n");
         vk::MemoryRequirements bufferMemoryRequirements;
         logicalDevice.getBufferMemoryRequirements(buffer, &bufferMemoryRequirements);
-        MemoryAllocationInfo allocInfo;
+        system::MemoryAllocationInfo allocInfo;
         allocInfo.size = bufferMemoryRequirements.size;
         allocInfo.memoryTypeBits = bufferMemoryRequirements.memoryTypeBits;
         allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;        // TODO: change host coherency
         allocInfo.alignment = bufferMemoryRequirements.alignment;
-        memoryData = MemoryManager::getInstance()->allocateMemoryLazy(allocInfo);
+        memoryData = system::MemoryManager::getInstance()->allocateMemoryLazy(allocInfo);
 
         vk::EventCreateInfo eventInfo;
         if(logicalDevice.createEvent(&eventInfo, nullptr, &bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
@@ -127,8 +127,8 @@ namespace spk
     {
         if(data != nullptr)
         {
-            const vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(memoryData.index);
-            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+            const vk::DeviceMemory& memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
+            const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
             if(logicalDevice.resetEvent(bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset event!\n");
             
             void* mappedMemory;
@@ -142,8 +142,8 @@ namespace spk
     void UniformBuffer::bindMemory()
     {
         //static bool memoryBound = false;      // TODO: add validation for memory binding
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::DeviceMemory& memory = MemoryManager::getInstance()->getMemory(memoryData.index);
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        const vk::DeviceMemory& memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
         if(logicalDevice.resetEvent(bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset event!\n");
 
         if(logicalDevice.bindBufferMemory(buffer, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory to buffer!\n");
@@ -157,10 +157,10 @@ namespace spk
         {
             if(buffer.operator VkBuffer() != VK_NULL_HANDLE)                                // ..and was properly created and wasn't destroyed, destroy it
             {
-                const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+                const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
                 logicalDevice.destroyBuffer(buffer, nullptr);
                 buffer = VkBuffer(0);
-                MemoryManager::getInstance()->freeMemory(memoryData.index);
+                system::MemoryManager::getInstance()->freeMemory(memoryData.index);
                 logicalDevice.destroyEvent(bufferReadyEvent, nullptr);
                 bufferReadyEvent = VkEvent(0);
             }

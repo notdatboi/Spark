@@ -15,7 +15,7 @@ namespace spk
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), title.c_str(), nullptr, nullptr);
 
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         vk::SemaphoreCreateInfo semaphoreInfo;
         logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &safeToPresentSemaphore);
         logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &safeToRenderSemaphore);
@@ -23,7 +23,7 @@ namespace spk
         logicalDevice.createFence(&fenceInfo, nullptr, &safeToRenderFence);
         logicalDevice.createFence(&fenceInfo, nullptr, &safeToPresentFence);
 
-        vk::Instance& instance = System::getInstance()->getvkInstance();
+        vk::Instance& instance = system::System::getInstance()->getvkInstance();
         VkSurfaceKHR tmpSurface;
         if(glfwCreateWindowSurface(instance, window, nullptr, &tmpSurface) != VK_SUCCESS)
         {
@@ -31,7 +31,7 @@ namespace spk
         }
         surface = tmpSurface;
 
-        presentQueue = Executives::getInstance()->getPresentQueue(surface);
+        presentQueue = system::Executives::getInstance()->getPresentQueue(surface);
         createSwapchain();
         createCommandBuffers();
         createRenderPass();
@@ -60,8 +60,8 @@ namespace spk
 
     void Window::draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders)
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        const vk::Queue& graphicsQueue = system::Executives::getInstance()->getGraphicsQueue();
         std::tuple<uint32_t, uint32_t, uint32_t> key = {resources->getIdentifier(), vertexBuffer->getIdentifier(), shaders->getIdentifier()};
         if(drawComponents.count(key) == 0)
         {
@@ -118,7 +118,7 @@ namespace spk
 
     void Window::initCommandBuffers(DrawComponents& drawComponents)
     {
-        const vk::CommandPool& commandPool = Executives::getInstance()->getPool();
+        const vk::CommandPool& commandPool = system::Executives::getInstance()->getPool();
         int i = 0;
         for(auto& commandBuffer : frameCommandBuffers)
         {
@@ -174,7 +174,7 @@ namespace spk
 
     void Window::createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const VertexAlignmentInfo& vertexAlignmentInfo, const vk::PipelineLayout& layout)
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
 
         vk::GraphicsPipelineCreateInfo pipelineInfo;
 
@@ -328,9 +328,9 @@ namespace spk
 
     void Window::createSwapchain()
     {
-        const vk::PhysicalDevice& physicalDevice = System::getInstance()->getPhysicalDevice();
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        uint32_t graphicsFamilyIndex = Executives::getInstance()->getGraphicsQueueFamilyIndex();
+        const vk::PhysicalDevice& physicalDevice = system::System::getInstance()->getPhysicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        uint32_t graphicsFamilyIndex = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
         vk::SurfaceCapabilitiesKHR capabilities;
         if(physicalDevice.getSurfaceCapabilitiesKHR(surface, &capabilities) != vk::Result::eSuccess) throw std::runtime_error("Failed to get surface capabilities!\n");
         uint32_t surfaceFormatsCount;
@@ -394,7 +394,7 @@ namespace spk
 
     void Window::createRenderPass()
     {
-        const vk::Device& logicalDevice = spk::System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
 
         vk::AttachmentDescription attachment;
         attachment.setFormat(surfaceFormat.format);
@@ -431,7 +431,7 @@ namespace spk
 
     void Window::createFramebuffers()
     {
-        const vk::Device& logicalDevice = spk::System::getInstance()->getLogicalDevice();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         framebuffers.resize(swapchainImageViews.size());
         int i = 0;
         for(auto& fb : framebuffers)
@@ -450,8 +450,8 @@ namespace spk
 
     void Window::createCommandBuffers()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::CommandPool& pool = Executives::getInstance()->getPool();
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        const vk::CommandPool& pool = system::Executives::getInstance()->getPool();
         frameCommandBuffers.resize(swapchainImages.size());
         vk::CommandBufferAllocateInfo allocInfo;
         allocInfo.setCommandBufferCount(frameCommandBuffers.size());
@@ -464,8 +464,8 @@ namespace spk
     {
         if(safeToPresentSemaphore)
         {
-            const auto& instance = System::getInstance()->getvkInstance();
-            const vk::Device& logicalDevice = spk::System::getInstance()->getLogicalDevice();
+            const auto& instance = system::System::getInstance()->getvkInstance();
+            const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
             logicalDevice.waitIdle();
             logicalDevice.destroySemaphore(safeToPresentSemaphore, nullptr);
             safeToPresentSemaphore = vk::Semaphore();
