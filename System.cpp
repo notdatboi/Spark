@@ -129,13 +129,18 @@ namespace spk
         vk::InstanceCreateInfo instanceInfo;
         instanceInfo.setEnabledExtensionCount(instanceExtensions.size());
         instanceInfo.setPpEnabledExtensionNames(instanceExtensions.data());
+        #ifdef DEBUG
         std::vector<const char*> instanceLayers = getInstanceLayers();
         instanceInfo.setEnabledLayerCount(instanceLayers.size());
         instanceInfo.setPpEnabledLayerNames(instanceLayers.data());
+        #else
+        instanceInfo.setEnabledLayerCount(0);
+        #endif
         vk::ApplicationInfo appInfo;
         appInfo.setApiVersion(VK_MAKE_VERSION(1, 0, 0));
         appInfo.setApplicationVersion(VK_MAKE_VERSION(0, 0, 1));
-        appInfo.setPApplicationName("TEST");
+        appInfo.setPApplicationName("Spark application");
+        appInfo.setPEngineName("Spark");
         instanceInfo.setPApplicationInfo(&appInfo);
         if(vk::createInstance(&instanceInfo, nullptr, &instance) != vk::Result::eSuccess) throw std::runtime_error("Failed to create instance!\n");
     }
@@ -220,7 +225,9 @@ namespace spk
 
     VKAPI_ATTR VkBool32 VKAPI_CALL System::callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
     {
+        #ifdef DEBUG
         std::cout << "DEBUG INFO: " << pCallbackData->pMessage << '\n';
+        #endif
         return false;
     }
 

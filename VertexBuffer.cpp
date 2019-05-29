@@ -221,8 +221,6 @@ namespace spk
         transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
         transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
         transmissionBufferInfo.setSize(vertex ? vertexBufferSize : indexBufferSize);
-        std::cout << "Vertex buffer size: " << vertexBufferSize << '\n';
-        std::cout << "Index buffer size: " << indexBufferSize << '\n';
         if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
 
         vk::MemoryRequirements transmissionBufferMemoryRequirements;
