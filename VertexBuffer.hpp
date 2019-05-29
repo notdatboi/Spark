@@ -49,7 +49,6 @@ namespace spk
     class VertexBuffer
     {
     public:
-        /* Public interface */
         VertexBuffer();
         VertexBuffer(const VertexBuffer& vb);
         VertexBuffer(VertexBuffer&& vb);
@@ -61,10 +60,9 @@ namespace spk
         VertexBuffer& operator=(VertexBuffer& rBuffer);
         VertexBuffer& operator=(VertexBuffer&& rBuffer);
         ~VertexBuffer();
-        /* */
-
+    private:
+        friend class Window;
         const uint32_t getIdentifier() const;
-        /* FOR TESTING */
         const vk::Buffer& getVertexBuffer() const;
         const vk::Buffer& getIndexBuffer() const;
         const VertexAlignmentInfo& getAlignmentInfo() const;
@@ -74,8 +72,7 @@ namespace spk
         const vk::Fence* getVertexBufferFence() const;
         const vk::Semaphore* getIndexBufferSemaphore() const;
         const vk::Semaphore* getVertexBufferSemaphore() const;
-        /* */
-    private:
+
         void bindMemory();
         VertexAlignmentInfo alignmentInfo;
         uint32_t vertexBufferSize;

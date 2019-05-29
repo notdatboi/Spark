@@ -11,7 +11,6 @@ namespace spk
     class UniformBuffer
     {
     public:
-        /* Public interface */
         UniformBuffer();
         UniformBuffer(const UniformBuffer& ub);
         UniformBuffer(UniformBuffer&& ub);
@@ -23,8 +22,8 @@ namespace spk
         void resetSetIndex(const uint32_t newIndex);
         void resetBinding(const uint32_t newBinding);
        ~UniformBuffer();
-       /* */
-
+    private:
+        friend class ResourceSet;
         void bindMemory();
         void update(const void* data);
         const vk::Buffer& getBuffer() const;
@@ -33,11 +32,10 @@ namespace spk
         const vk::DeviceSize getSize() const;
         const uint32_t getSet() const;
         const uint32_t getBinding() const;
-    private:
+
         vk::Buffer buffer;
         size_t size;
         system::AllocatedMemoryData memoryData;
-        //bool deviceLocal;
         vk::Event bufferReadyEvent;
         uint32_t setIndex;
         uint32_t binding;

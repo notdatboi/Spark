@@ -17,7 +17,6 @@ namespace spk
     class ResourceSet
     {
     public:
-        /* Public interface */
         ResourceSet();
         ResourceSet(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers);
         ResourceSet(const ResourceSet& set);
@@ -25,16 +24,14 @@ namespace spk
         void create(std::vector<Texture>& cTextures, std::vector<UniformBuffer>& cUniformBuffers);
         void update(const uint32_t set, const uint32_t binding, const void* data);
         ~ResourceSet();
-        /* */
-
-        /* FOR TESTING */
+    private:
+        friend class Window;
         const vk::PipelineLayout& getPipelineLayout() const;
         const std::vector<vk::DescriptorSet>& getDescriptorSets() const;
         const uint32_t getIdentifier() const;
         const std::vector<const vk::Semaphore*>& getTextureSemaphores() const;
         const std::vector<const vk::Fence*>& getTextureFences() const;
-        /* */
-    private:
+
         std::vector<Texture> textures;
         std::vector<UniformBuffer> uniformBuffers;
         vk::DescriptorPool descriptorPool;

@@ -31,10 +31,11 @@ namespace spk
         ShaderSet& operator=(const ShaderSet& set);
         void destroy();
         ~ShaderSet();
-
+    private:
+        friend class Window;
         const std::vector<vk::PipelineShaderStageCreateInfo>& getShaderStages() const;
         const uint32_t getIdentifier() const;
-    private:
+
         static uint32_t count;
         uint32_t identifier;
         std::vector<ShaderInfo> infos;

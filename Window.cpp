@@ -43,19 +43,9 @@ namespace spk
         create(width, height, title);
     }
     
-    const vk::SurfaceKHR& Window::getSurface() const
-    {
-        return surface;
-    }
-
     GLFWwindow* Window::getGLFWWindow()
     {
         return window;
-    }
-
-    std::pair<uint32_t, const vk::Queue*> Window::getPresentQueue()
-    {
-        return presentQueue;
     }
 
     void Window::draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders)

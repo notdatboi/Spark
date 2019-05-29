@@ -31,7 +31,6 @@ namespace spk
     class Texture
     {
     public:
-        /* Public interface */
         Texture();
         Texture(const Texture& txt);
         Texture(Texture&& txt);
@@ -43,8 +42,8 @@ namespace spk
         void resetSetIndex(const uint32_t newIndex);
         void resetBinding(const uint32_t newBinding);
         ~Texture();
-        /* */
-
+    private:
+        friend class ResourceSet;
         const vk::ImageView& getImageView() const;
         vk::ImageView& getImageView();
         const vk::ImageLayout& getLayout() const;
@@ -54,7 +53,7 @@ namespace spk
         const vk::Fence* getFence() const;
         const uint32_t getSet() const;
         const uint32_t getBinding() const;
-    private:
+
         ImageInfo imageInfo;
         system::AllocatedMemoryData memoryData;
         vk::Image image;

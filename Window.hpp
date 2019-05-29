@@ -23,9 +23,7 @@ namespace spk
         void draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders);
         ~Window();
 
-        const vk::SurfaceKHR& getSurface() const;
         GLFWwindow* getGLFWWindow();
-        std::pair<uint32_t, const vk::Queue*> getPresentQueue();
     private:
         struct DrawComponents
         {
