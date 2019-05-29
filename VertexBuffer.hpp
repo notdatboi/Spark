@@ -63,7 +63,6 @@ namespace spk
         ~VertexBuffer();
         /* */
 
-        void bindMemory();
         const uint32_t getIdentifier() const;
         /* FOR TESTING */
         const vk::Buffer& getVertexBuffer() const;
@@ -77,8 +76,7 @@ namespace spk
         const vk::Semaphore* getVertexBufferSemaphore() const;
         /* */
     private:
-        //vk::Fence
-        //vk::Semaphore
+        void bindMemory();
         VertexAlignmentInfo alignmentInfo;
         uint32_t vertexBufferSize;
         uint32_t indexBufferSize;

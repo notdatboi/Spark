@@ -212,6 +212,7 @@ namespace spk
         const vk::Queue& graphicsQueue = Executives::getInstance()->getGraphicsQueue();
         const vk::CommandBuffer& updateCommandBuffer = vertex ? vertexUpdateCommandBuffer : indexUpdateCommandBuffer;
 
+        bindMemory();
         vk::Buffer transmissionBuffer;
         vk::BufferCreateInfo transmissionBufferInfo;
         transmissionBufferInfo.setQueueFamilyIndexCount(1);
@@ -220,6 +221,8 @@ namespace spk
         transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
         transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
         transmissionBufferInfo.setSize(vertex ? vertexBufferSize : indexBufferSize);
+        std::cout << "Vertex buffer size: " << vertexBufferSize << '\n';
+        std::cout << "Index buffer size: " << indexBufferSize << '\n';
         if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
 
         vk::MemoryRequirements transmissionBufferMemoryRequirements;
@@ -244,8 +247,8 @@ namespace spk
         if(updateCommandBuffer.begin(&commandBufferInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
 
         vk::BufferCopy transmissionCopyData;
-        transmissionCopyData.setSrcOffset(transmissionBufferData.offset);
-        transmissionCopyData.setDstOffset(vertex ? vertexMemoryData.offset : indexMemoryData.offset);
+        transmissionCopyData.setSrcOffset(0);
+        transmissionCopyData.setDstOffset(0);
         transmissionCopyData.setSize(vertex ? vertexBufferSize : indexBufferSize);
         updateCommandBuffer.copyBuffer(transmissionBuffer, vertex ? vertexBuffer : indexBuffer, 1, &transmissionCopyData);
 
@@ -271,15 +274,20 @@ namespace spk
 
     void VertexBuffer::bindMemory()
     {
-        const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
-        const vk::DeviceMemory& vertexBufferMemory = MemoryManager::getInstance()->getMemory(vertexMemoryData.index);
-        if(indexBufferSize != 0)
+        static bool memoryBound = false;
+        if(!memoryBound)
         {
-            const vk::DeviceMemory& indexBufferMemory = MemoryManager::getInstance()->getMemory(indexMemoryData.index);
-            if(logicalDevice.bindBufferMemory(indexBuffer, MemoryManager::getInstance()->getMemory(indexMemoryData.index), indexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
-        }
+            const vk::Device& logicalDevice = System::getInstance()->getLogicalDevice();
+            const vk::DeviceMemory& vertexBufferMemory = MemoryManager::getInstance()->getMemory(vertexMemoryData.index);
+            if(indexBufferSize != 0)
+            {
+                const vk::DeviceMemory& indexBufferMemory = MemoryManager::getInstance()->getMemory(indexMemoryData.index);
+                if(logicalDevice.bindBufferMemory(indexBuffer, MemoryManager::getInstance()->getMemory(indexMemoryData.index), indexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
+            }
 
-        if(logicalDevice.bindBufferMemory(vertexBuffer, MemoryManager::getInstance()->getMemory(vertexMemoryData.index), vertexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
+            if(logicalDevice.bindBufferMemory(vertexBuffer, MemoryManager::getInstance()->getMemory(vertexMemoryData.index), vertexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
+            memoryBound = true;
+        }
     }
 
     void VertexBuffer::destroy()
