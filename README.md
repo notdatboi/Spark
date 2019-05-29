@@ -1,14 +1,6 @@
 # Spark
 Graphics library, based on Vulkan
 ## Status
-In development
+Developed, needs cosmetic corrections
 ## Public Reference
-```spk::System``` class is used for Spark initialization
-
-```spk::Texture``` class is used for storing textures
-
-```spk::UniformBuffer``` class is used for storing and processing uniform buffers
-
-```spk::ResouceSet``` class is final combination of 2 previous classes that can be fetched in shader
-
-```spk::VertexBuffer``` class is a combination of vertex and index buffers to fetch vertices from shaders
+The docs will be here
