@@ -2,5 +2,5 @@
 Graphics library, based on Vulkan
 ## Status
 Developed, needs cosmetic corrections
-## Public Reference
+## Documentation
 The docs will be here
