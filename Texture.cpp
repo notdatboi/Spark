@@ -3,7 +3,7 @@
 namespace spk
 {
 
-    ImageInfo::ImageInfo()
+    Texture::ImageInfo::ImageInfo()
     {
         type = vk::ImageType::e2D;
         format = vk::Format::eR8G8B8A8Unorm;
@@ -20,7 +20,7 @@ namespace spk
         channelCount = 4;
     }
 
-    ImageInfo::operator vk::ImageCreateInfo()
+    Texture::ImageInfo::operator vk::ImageCreateInfo()
     {
         vk::ImageCreateInfo info;
         info.setArrayLayers(arrayLayers);

@@ -8,26 +8,6 @@
 namespace spk
 {
 
-    struct ImageInfo
-    {
-        ImageInfo();
-        operator vk::ImageCreateInfo();
-        vk::ImageCreateFlags flags;
-        vk::ImageType type;
-        vk::Format format;
-        vk::Extent3D extent;
-        uint32_t mipLevels;
-        uint32_t arrayLayers;
-        vk::SampleCountFlagBits samples;
-        vk::ImageTiling tiling;
-        vk::ImageUsageFlags usage;
-        vk::SharingMode sharingMode;
-        uint32_t queueFamilyIndexCount;
-        std::vector<uint32_t> queueFamilyIndices;
-        vk::ImageLayout layout;
-        uint32_t channelCount;
-    };
-
     class Texture
     {
     public:
@@ -43,6 +23,27 @@ namespace spk
         void resetBinding(const uint32_t newBinding);
         ~Texture();
     private:
+    
+        struct ImageInfo
+        {
+            ImageInfo();
+            operator vk::ImageCreateInfo();
+            vk::ImageCreateFlags flags;
+            vk::ImageType type;
+            vk::Format format;
+            vk::Extent3D extent;
+            uint32_t mipLevels;
+            uint32_t arrayLayers;
+            vk::SampleCountFlagBits samples;
+            vk::ImageTiling tiling;
+            vk::ImageUsageFlags usage;
+            vk::SharingMode sharingMode;
+            uint32_t queueFamilyIndexCount;
+            std::vector<uint32_t> queueFamilyIndices;
+            vk::ImageLayout layout;
+            uint32_t channelCount;
+        };
+
         friend class ResourceSet;
         const vk::ImageView& getImageView() const;
         vk::ImageView& getImageView();

@@ -9,11 +9,6 @@
 namespace spk
 {
 
-    struct ResourceSetContainmentInfo
-    {
-        std::map<uint32_t, std::pair<uint32_t, bool> > bindings; // [binding]: {resourceVectorIndex, texture or buffer (t or f)}
-    };
-
     class ResourceSet
     {
     public:
@@ -25,6 +20,11 @@ namespace spk
         void update(const uint32_t set, const uint32_t binding, const void* data);
         ~ResourceSet();
     private:
+        struct ResourceSetContainmentInfo
+        {
+            std::map<uint32_t, std::pair<uint32_t, bool> > bindings; // [binding]: {resourceVectorIndex, texture or buffer (t or f)}
+        };
+
         friend class Window;
         const vk::PipelineLayout& getPipelineLayout() const;
         const std::vector<vk::DescriptorSet>& getDescriptorSets() const;
