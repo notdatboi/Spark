@@ -14,8 +14,8 @@ namespace spk
         UniformBuffer();
         UniformBuffer(const UniformBuffer& ub);
         UniformBuffer(UniformBuffer&& ub);
-        UniformBuffer(const size_t cSize/*, const bool cDeviceLocal = false*/, const uint32_t cSetIndex, const uint32_t cBinding);
-        void create(const size_t cSize/*, const bool cDeviceLocal = false*/, const uint32_t cSetIndex, const uint32_t cBinding);
+        UniformBuffer(const size_t cSize, const uint32_t cSetIndex, const uint32_t cBinding);
+        void create(const size_t cSize, const uint32_t cSetIndex, const uint32_t cBinding);
         UniformBuffer& operator=(const UniformBuffer& rBuffer);
         UniformBuffer& operator=(UniformBuffer& rBuffer);
         UniformBuffer& operator=(UniformBuffer&& rBuffer);
