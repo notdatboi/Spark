@@ -35,7 +35,7 @@ Constructor from an existing texture. Moves given texture to from which it was c
 ```cpp
 Texture(const uint32_t width, const uint32_t height, const void* rawData, uint32_t cSetIndex, uint32_t cBinding)
 ```
-Constructor from parameters. Width and height of texture are specified by first and second parameter respectively, rawData parameter is a pointer to 4-channel RGBA image data, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
+Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, rawData parameter is a pointer to 4-channel RGBA image data, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
 ***
 ```cpp
 void create(const uint32_t width, const uint32_t height, const void* rawData, uint32_t cSetIndex, uint32_t cBinding)
@@ -93,7 +93,7 @@ Constructor from an existing uniform buffer. Moves ub to the current uniform buf
 ```cpp
 UniformBuffer(const uint32_t cSize, const uint32_t cSetIndex, const uint32_t cBinding)
 ```
-Constructor. Size of the buffer is specified by cSize parameter, cSetIndex and cBinding are the set index and binding, with which the buffer can be fetched in shader.
+Constructor. Size of the buffer (in **bytes**) is specified by cSize parameter, cSetIndex and cBinding are the set index and binding, with which the buffer can be fetched in shader.
 ***
 ```cpp
 void create(const uint32_t cSize, const uint32_t cSetIndex, const uint32_t cBinding)
@@ -227,7 +227,7 @@ Constructor. Moves given buffer to current.
 ```cpp
 VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0)
 ```
-Constructor. Creates vertex buffer using given ```VertexAlignmentInfo```, size of a vertex buffer and size of an index buffer. For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0.
+Constructor. Creates vertex buffer using given ```VertexAlignmentInfo```, size of a vertex buffer and size of an index buffer (both in **bytes**). For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0.
 ***
 ```cpp
 void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0)
@@ -295,4 +295,85 @@ Gets created GLFW window pointer for you to handle.
 ~Window()
 ```
 Destructor.
+***
+### Enums and structs
+```cpp
+enum class ShaderType
+{
+  vertex, 
+  fragment
+}
+```
+This enumeration class is used to identify, which type of shader you are going to load.
+***
+```cpp
+struct ShaderInfo
+{
+  ShaderType type;
+  std::string filename;
+}
+```
+This structure is used to get shader code from file and identify shader type. Shader file **must** be valid SPIR-V shader, which you can compile from GLSL-like shader code using glslangValidator.
+***
+```cpp
+enum class FieldFormat
+{
+  int32,
+  uint32,
+  float32,
+  double64,
+
+  vec2i,
+  vec2u,
+  vec2f,
+  vec2d,
+
+  vec3i,
+  vec3u,
+  vec3f,
+  vec3d,
+
+  vec4i,
+  vec4u,
+  vec4f,
+  vec4d
+}
+```
+This enumeration class spescifies the type of vertex field, which can be understood as follows:
++ int32 = 32-bit signed integer
++ uint32 = 32-bit unsigned integer
++ float32 = 32-bit signed float
++ double64 = 64-bit double-precision signed float
++ vec2i = vector of 2 int32
++ vec2u = vector of 2 uint32
++ vec2f = vector of 2 float32
++ vec2d = vector of 2 double64
++ vec3i = vector of 3 int32
++ vec3u = vector of 3 uint32
++ vec3f = vector of 3 float32
++ vec3d = vector of 3 double64
++ vec4i = vector of 4 int32
++ vec4u = vector of 4 uint32
++ vec4f = vector of 4 float32
++ vec4d = vector of 4 double64
+***
+```cpp
+struct StructFieldInfo
+{
+  uint32_t location;
+  FieldFormat format;
+  uint32_t offset;
+}
+```
+StructFieldInfo specifies one field of structure you are going to use as vertex in vertex shader. ```location``` is a shader layout attribute, ```format``` is a format of a field and ```offset``` is a field offset (in **bytes**) from the befinning of the structure (usually obtained with a standard function offsetof()).
+***
+```cpp
+struct VertexAlignmentInfo
+{
+  uint32_t binding;
+  uint32_t structSize;
+  std::vector<StructFieldInfo> fields;
+}
+```
+VertexAlignmentInfo specifies how the vertex components are aligned. ```binding``` is a shader layout attribute, ```structSize``` is a size of one vertex (in **bytes**) and ```fields``` vector describes every field of vertex class or structure.
 ***
