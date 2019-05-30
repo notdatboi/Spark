@@ -35,9 +35,9 @@ namespace spk
         return bufferReadyEvent;
     }
 
-    UniformBuffer::UniformBuffer(const size_t cSize/*, const bool cDeviceLocal*/, uint32_t cSetIndex, uint32_t cBinding)
+    UniformBuffer::UniformBuffer(const size_t cSize, const uint32_t cSetIndex, const uint32_t cBinding)
     {
-        create(cSize/*, cDeviceLocal*/, cSetIndex, cBinding);
+        create(cSize, cSetIndex, cBinding);
     }
 
     UniformBuffer& UniformBuffer::operator=(const UniformBuffer& rBuffer)
@@ -92,12 +92,10 @@ namespace spk
         return size;
     }
 
-    void UniformBuffer::create(const size_t cSize/*, const bool cDeviceLocal*/, uint32_t cSetIndex, uint32_t cBinding)
+    void UniformBuffer::create(const size_t cSize, const uint32_t cSetIndex, const uint32_t cBinding)
     {
         setIndex = cSetIndex;
         binding = cBinding;
-    //    rawBufferData = rawData;
-        //deviceLocal = cDeviceLocal;
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         vk::BufferCreateInfo createInfo;
         createInfo.setQueueFamilyIndexCount(1);
@@ -141,7 +139,6 @@ namespace spk
 
     void UniformBuffer::bindMemory()
     {
-        //static bool memoryBound = false;      // TODO: add validation for memory binding
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         const vk::DeviceMemory& memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
         if(logicalDevice.resetEvent(bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset event!\n");
