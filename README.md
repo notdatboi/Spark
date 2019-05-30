@@ -167,3 +167,132 @@ Updates texture or uniform buffer that have setIndex and binding equal to given,
 ```
 Destructor.
 ***
+#### Shader Set Class
+```cpp
+spk::ShaderSet
+```
+**Public member functions**
+***
+```cpp
+ShaderSet()
+```
+Default constructor. Does not init anything.
+***
+```cpp
+ShaderSet(const ShaderSet& set)
+```
+Constructor. Creates object using parameters from given set.
+***
+```cpp
+ShaderSet(const std::vector<ShaderInfo>& shaders)
+```
+Constructor. Creates object using ```ShaderInfo``` structs.
+***
+```cpp
+void create(const std::vector<ShaderInfo>& shaders)
+```
+Constructs shader set from given shader infos. Must be called only once and only if the shader set was created using default constructor.
+***
+```cpp
+ShaderSet& operator=(const ShaderSet& set)
+```
+Copy function. Deletes old contents of a current shader set and inits it with parameters of a given set.
+***
+```cpp
+~ShaderSet()
+```
+Destructor.
+***
+#### Vertex Buffer Class
+```cpp
+spk::VertexBuffer
+```
+**Public member functions**
+***
+```cpp
+VertexBuffer()
+```
+Default constructor. Does not init anything.
+***
+```cpp
+VertexBuffer(const VertexBuffer& vb)
+```
+Constructor. Creates vertex buffer from the other vertex buffer.
+***
+```cpp
+VertexBuffer(VertexBuffer&& vb)
+```
+Constructor. Moves given buffer to current.
+***
+```cpp
+VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0)
+```
+Constructor. Creates vertex buffer using given ```VertexAlignmentInfo```, size of a vertex buffer and size of an index buffer. For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0.
+***
+```cpp
+void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0)
+```
+Creates vertex buffer using given ```VertexAlignmentInfo```, size of a vertex buffer and size of an index buffer. For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0. Must be called only once and only if the object was created using default constructor.
+***
+```cpp
+void updateVertexBuffer(const void* data)
+```
+Writes given data to the vertex buffer.
+***
+```cpp
+void updateIndexBuffer(const void* data)
+```
+Writes given data to the index buffer.
+***
+```cpp
+VertexBuffer& operator=(const VertexBuffer& rBuffer)
+VeretxBuffer& operator=(VertexBuffer& rBuffer)
+```
+Each of these function destroys current VertexBuffer content and creates new VertexBuffer using the data fetched from rBuffer.
+***
+```cpp
+VertexBuffer& operator=(VertexBuffer&& rBuffer)
+```
+Deletes all current VertexBuffer contents and moves rBuffer contents to the current VertexBuffer.
+***
+```cpp
+~VertexBuffer()
+```
+Destructor.
+***
+#### Window Class
+```cpp
+spk::Window
+```
+**Public member functions**
+***
+```cpp
+Window()
+```
+Default constructor. Doesn't init anything.
+***
+```cpp
+Window(const uint32_t cWidth, const uint32_t cHeight, const std::string title)
+```
+Constructor. Creates window from given parameters: width, height and title of the window.
+***
+```cpp
+void create(const uint32_t cWidth, const uint32_t cHeight, const std::string title)
+```
+Creates window from given parameters: width, height and title of the window. Must be called only once and only if the object was created using default constructor.
+***
+```cpp
+void draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders)
+```
+Draws picture and presents it using given pointers: pointer to resource set for use in shaders, pointer to vertex buffer and pointer to shader set to load shaders.
+***
+```cpp
+GLFWwindow* getGLFWWindow()
+```
+Gets created GLFW window pointer for you to handle.
+***
+```cpp
+~Window()
+```
+Destructor.
+***
