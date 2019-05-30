@@ -29,12 +29,12 @@ namespace spk
         ShaderSet(const std::vector<ShaderInfo>& shaders);
         void create(const std::vector<ShaderInfo>& shaders);
         ShaderSet& operator=(const ShaderSet& set);
-        void destroy();
         ~ShaderSet();
     private:
         friend class Window;
         const std::vector<vk::PipelineShaderStageCreateInfo>& getShaderStages() const;
         const uint32_t getIdentifier() const;
+        void destroy();
 
         static uint32_t count;
         uint32_t identifier;
