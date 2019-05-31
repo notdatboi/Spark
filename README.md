@@ -33,12 +33,12 @@ Texture(Texture&& txt)
 Constructor from an existing texture. Moves given texture to from which it was called.
 ***
 ```cpp
-Texture(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding)
+Texture(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding)
 ```
-Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
+Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, format is an image format, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
 ***
 ```cpp
-void create(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding)
+void create(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding)
 ```
 Creation function. Must be called only once and only if the texture was created using default constructor.
 ***
@@ -376,4 +376,17 @@ struct VertexAlignmentInfo
 }
 ```
 VertexAlignmentInfo specifies how the vertex components are aligned. ```binding``` is a shader layout attribute, ```structSize``` is a size of one vertex (in **bytes**) and ```fields``` vector describes every field of vertex class or structure.
+***
+```cpp
+enum class ImageFormat
+{
+  RGBA8,
+  RGB8,
+  BGR8,
+  BGRA8,
+  RGB16,
+  RGBA16,
+};
+```
+ImageFormat enumeration class specifes the format of image with following syntax: R, G, B and A letters indicate channel order and availability and number sets the number of bits per channel.
 ***
