@@ -42,14 +42,14 @@ namespace spk
     Texture& Texture::operator=(const Texture& rTexture)
     {
         destroy();
-        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
+        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.setIndex, rTexture.binding);
         return *this;
     }
 
     Texture& Texture::operator=(Texture& rTexture)
     {
         destroy();
-        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.rawImageData.data(), rTexture.setIndex, rTexture.binding);
+        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.setIndex, rTexture.binding);
         return *this;
     }
 
@@ -106,7 +106,7 @@ namespace spk
 
     Texture::Texture(const Texture& txt)
     {
-        create(txt.imageInfo.extent.width, txt.imageInfo.extent.height, txt.rawImageData.data(), txt.setIndex, txt.binding);
+        create(txt.imageInfo.extent.width, txt.imageInfo.extent.height, txt.setIndex, txt.binding);
     }
     
     Texture::Texture(Texture&& txt)
@@ -122,16 +122,15 @@ namespace spk
         binding = std::move(txt.binding);
     }
 
-    Texture::Texture(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
+    Texture::Texture(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding)
     {
-        create(width, height, rawData, cSetIndex, cBinding);
+        create(width, height, cSetIndex, cBinding);
     }
 
-    void Texture::create(const uint32_t width, const uint32_t height, const void * rawData, uint32_t cSetIndex, uint32_t cBinding)
+    void Texture::create(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding)
     {
         imageInfo.extent = vk::Extent3D(width, height, 1);
         rawImageData.resize(width * height * imageInfo.channelCount);
-        memcpy(rawImageData.data(), rawData, rawImageData.size());
         setIndex = cSetIndex;
         binding = cBinding;
         init();
@@ -191,8 +190,6 @@ namespace spk
         graphicsQueue.submit(1, &submitInfo, textureReadyFence);
 
         if(logicalDevice.bindImageMemory(image, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory to the texture!\n");
-
-        update(rawImageData.data());
 
         vk::ImageSubresourceRange range;
         range.setAspectMask(vk::ImageAspectFlagBits::eColor);
