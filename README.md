@@ -38,7 +38,7 @@ Texture(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_
 Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
 ***
 ```cpp
-void create(const uint32_t width, const uint32_t height, const void* rawData, uint32_t cSetIndex, uint32_t cBinding)
+void create(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding)
 ```
 Creation function. Must be called only once and only if the texture was created using default constructor.
 ***
