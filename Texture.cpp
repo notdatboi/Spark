@@ -6,7 +6,7 @@ namespace spk
     Texture::ImageInfo::ImageInfo()
     {
         type = vk::ImageType::e2D;
-        format = vk::Format::eR8G8B8A8Unorm;
+        //format = vk::Format::eR8G8B8A8Unorm;
         mipLevels = 1;
         arrayLayers = 1;
         samples = vk::SampleCountFlagBits::e1;
@@ -17,7 +17,7 @@ namespace spk
         queueFamilyIndexCount = 1;
         queueFamilyIndices.push_back(graphicsFamilyIndex);
         layout = vk::ImageLayout::eUndefined;
-        channelCount = 4;
+        //channelCount = 4;
     }
 
     Texture::ImageInfo::operator vk::ImageCreateInfo()
@@ -42,14 +42,14 @@ namespace spk
     Texture& Texture::operator=(const Texture& rTexture)
     {
         destroy();
-        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.setIndex, rTexture.binding);
+        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.imageFormat, rTexture.setIndex, rTexture.binding);
         return *this;
     }
 
     Texture& Texture::operator=(Texture& rTexture)
     {
         destroy();
-        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.setIndex, rTexture.binding);
+        create(rTexture.imageInfo.extent.width, rTexture.imageInfo.extent.height, rTexture.imageFormat, rTexture.setIndex, rTexture.binding);
         return *this;
     }
 
@@ -58,6 +58,7 @@ namespace spk
         destroy();
         rTexture.transferred = true;
         imageInfo = std::move(rTexture.imageInfo);
+        imageFormat = std::move(rTexture.imageFormat);
         memoryData = std::move(rTexture.memoryData);
         image = std::move(rTexture.image);
         view = std::move(rTexture.view);
@@ -67,6 +68,7 @@ namespace spk
         binding = std::move(rTexture.binding);
         return *this;
     }
+
     const vk::Semaphore* Texture::getSemaphore() const
     {
         return &textureReadySemaphore;
@@ -106,13 +108,14 @@ namespace spk
 
     Texture::Texture(const Texture& txt)
     {
-        create(txt.imageInfo.extent.width, txt.imageInfo.extent.height, txt.setIndex, txt.binding);
+        create(txt.imageInfo.extent.width, txt.imageInfo.extent.height, txt.imageFormat, txt.setIndex, txt.binding);
     }
     
     Texture::Texture(Texture&& txt)
     {
         txt.transferred = true;
         imageInfo = std::move(txt.imageInfo);
+        imageFormat = std::move(txt.imageFormat);
         memoryData = std::move(txt.memoryData);
         image = std::move(txt.image);
         view = std::move(txt.view);
@@ -122,13 +125,43 @@ namespace spk
         binding = std::move(txt.binding);
     }
 
-    Texture::Texture(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding)
+    Texture::Texture(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding)
     {
-        create(width, height, cSetIndex, cBinding);
+        create(width, height, format, cSetIndex, cBinding);
     }
 
-    void Texture::create(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding)
+    void Texture::create(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding)
     {
+        imageFormat = format;
+        switch (format)
+        {
+        case ImageFormat::RGBA8 :
+            imageInfo.format = vk::Format::eR8G8B8A8Unorm;
+            imageInfo.channelCount = 4;
+            break;
+        case ImageFormat::RGB8 :
+            imageInfo.format = vk::Format::eR8G8B8Unorm;
+            imageInfo.channelCount = 3;
+            break;
+        case ImageFormat::BGR8 :
+            imageInfo.format = vk::Format::eB8G8R8Unorm;
+            imageInfo.channelCount = 3;
+            break;
+        case ImageFormat::BGRA8 :
+            imageInfo.format = vk::Format::eB8G8R8A8Unorm;
+            imageInfo.channelCount = 4;
+            break;
+        case ImageFormat::RGB16 :
+            imageInfo.format = vk::Format::eR16G16B16Unorm;
+            imageInfo.channelCount = 3;
+            break;
+        case ImageFormat::RGBA16 :
+            imageInfo.format = vk::Format::eR16G16B16A16Unorm;
+            imageInfo.channelCount = 4;
+            break;
+        default:
+            break;
+        }
         imageInfo.extent = vk::Extent3D(width, height, 1);
         rawImageData.resize(width * height * imageInfo.channelCount);
         setIndex = cSetIndex;

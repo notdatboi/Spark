@@ -7,6 +7,15 @@
 
 namespace spk
 {
+    enum class ImageFormat
+    {
+        RGBA8,
+        RGB8,
+        BGR8,
+        BGRA8,
+        RGB16,
+        RGBA16,
+    };
 
     class Texture
     {
@@ -14,8 +23,8 @@ namespace spk
         Texture();
         Texture(const Texture& txt);
         Texture(Texture&& txt);
-        Texture(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding);
-        void create(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding);
+        Texture(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding);
+        void create(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding);
         Texture& operator=(const Texture& rTexture);
         Texture& operator=(Texture& rTexture);
         Texture& operator=(Texture&& rTexture);
@@ -56,6 +65,7 @@ namespace spk
         const uint32_t getBinding() const;
 
         ImageInfo imageInfo;
+        ImageFormat imageFormat;
         system::AllocatedMemoryData memoryData;
         vk::Image image;
         vk::ImageView view;
@@ -71,7 +81,6 @@ namespace spk
         void init();
         void destroy();
     };
-
 }
 
 #endif
