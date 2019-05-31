@@ -6,14 +6,15 @@ namespace spk
 
     Window::Window(){}
 
-    void Window::create(const uint32_t cWidth, const uint32_t cHeight, const std::string title)
+    void Window::create(const uint32_t cWidth, const uint32_t cHeight, const std::string cTitle, const DrawOptions cOptions)
     {
         currentPipeline = {~uint32_t(0), ~uint32_t(0), ~uint32_t(0)};
         width = cWidth;
         height = cHeight;
+        options = cOptions;
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), title.c_str(), nullptr, nullptr);
+        window = glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), cTitle.c_str(), nullptr, nullptr);
 
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         vk::SemaphoreCreateInfo semaphoreInfo;
@@ -38,9 +39,9 @@ namespace spk
         createFramebuffers();
     }
 
-    Window::Window(const uint32_t cWidth, const uint32_t cHeight, const std::string title)
+    Window::Window(const uint32_t cWidth, const uint32_t cHeight, const std::string cTitle, const DrawOptions cOptions)
     {
-        create(width, height, title);
+        create(width, height, cTitle, cOptions);
     }
     
     GLFWwindow* Window::getGLFWWindow()
@@ -273,8 +274,23 @@ namespace spk
         rasterizationInfo.setDepthClampEnable(false);
         rasterizationInfo.setRasterizerDiscardEnable(false);
         rasterizationInfo.setPolygonMode(vk::PolygonMode::eFill);
-        rasterizationInfo.setCullMode(vk::CullModeFlagBits::eBack);
-        rasterizationInfo.setFrontFace(vk::FrontFace::eClockwise);
+        switch (options.cullMode)
+        {
+        case CullMode::None :
+            rasterizationInfo.setCullMode(vk::CullModeFlagBits::eNone);
+            break;
+        case CullMode::CounterClockwise :
+            rasterizationInfo.setCullMode(vk::CullModeFlagBits::eBack);
+            rasterizationInfo.setFrontFace(vk::FrontFace::eClockwise);
+            break;
+        case CullMode::Clockwise :
+            rasterizationInfo.setCullMode(vk::CullModeFlagBits::eBack);
+            rasterizationInfo.setFrontFace(vk::FrontFace::eCounterClockwise);
+            break;
+        
+        default:
+            break;
+        }
         rasterizationInfo.setDepthBiasEnable(false);
         rasterizationInfo.setLineWidth(1.0);
 

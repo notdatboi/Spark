@@ -12,17 +12,27 @@
 
 namespace spk
 {
+    enum class CullMode
+    {
+        Clockwise,
+        CounterClockwise,
+        None
+    };
+
+    struct DrawOptions
+    {
+        CullMode cullMode;
+    };
 
     class Window
     {
     public:
         Window();
-        void create(const uint32_t cWidth, const uint32_t cHeight, const std::string title);
-        Window(const uint32_t cWidth, const uint32_t cHeight, const std::string title);
+        void create(const uint32_t cWidth, const uint32_t cHeight, const std::string cTitle, const DrawOptions cOptions);
+        Window(const uint32_t cWidth, const uint32_t cHeight, const std::string cTitle, const DrawOptions cOptions);
         void destroy();
         void draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders);
         ~Window();
-
         GLFWwindow* getGLFWWindow();
     private:
         struct DrawComponents
@@ -52,6 +62,7 @@ namespace spk
 
         uint32_t width;
         uint32_t height;
+        DrawOptions options;
 
         void createSwapchain();
         void createRenderPass();
