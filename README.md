@@ -33,9 +33,9 @@ Texture(Texture&& txt)
 Constructor from an existing texture. Moves given texture to from which it was called.
 ***
 ```cpp
-Texture(const uint32_t width, const uint32_t height, const void* rawData, uint32_t cSetIndex, uint32_t cBinding)
+Texture(const uint32_t width, const uint32_t height, uint32_t cSetIndex, uint32_t cBinding)
 ```
-Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, rawData parameter is a pointer to 4-channel RGBA image data, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
+Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
 ***
 ```cpp
 void create(const uint32_t width, const uint32_t height, const void* rawData, uint32_t cSetIndex, uint32_t cBinding)
