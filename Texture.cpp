@@ -125,15 +125,15 @@ namespace spk
         binding = std::move(txt.binding);
     }
 
-    Texture::Texture(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding)
+    Texture::Texture(const uint32_t cWidth, const uint32_t cHeight, ImageFormat cFormat, uint32_t cSetIndex, uint32_t cBinding)
     {
-        create(width, height, format, cSetIndex, cBinding);
+        create(cWidth, cHeight, cFormat, cSetIndex, cBinding);
     }
 
-    void Texture::create(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding)
+    void Texture::create(const uint32_t cWidth, const uint32_t cHeight, ImageFormat cFormat, uint32_t cSetIndex, uint32_t cBinding)
     {
-        imageFormat = format;
-        switch (format)
+        imageFormat = cFormat;
+        switch (cFormat)
         {
         case ImageFormat::RGBA8 :
             imageInfo.format = vk::Format::eR8G8B8A8Unorm;
@@ -162,8 +162,8 @@ namespace spk
         default:
             break;
         }
-        imageInfo.extent = vk::Extent3D(width, height, 1);
-        rawImageData.resize(width * height * imageInfo.channelCount);
+        imageInfo.extent = vk::Extent3D(cWidth, cHeight, 1);
+        rawImageData.resize(cWidth * cHeight * imageInfo.channelCount);
         setIndex = cSetIndex;
         binding = cBinding;
         init();

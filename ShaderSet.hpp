@@ -11,8 +11,8 @@ namespace spk
 {
     enum class ShaderType
     {
-        vertex, 
-        fragment
+        Vertex, 
+        Fragment
     };
 
     struct ShaderInfo

@@ -52,10 +52,10 @@ namespace spk
 
             switch (shaders[i].type)
             {
-                case ShaderType::vertex:
+                case ShaderType::Vertex:
                     shaderModules[i].second = vk::ShaderStageFlagBits::eVertex;
                     break;
-                case ShaderType::fragment:
+                case ShaderType::Fragment:
                     shaderModules[i].second = vk::ShaderStageFlagBits::eFragment;
                     break;
             }
