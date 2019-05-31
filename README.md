@@ -33,12 +33,12 @@ Texture(Texture&& txt)
 Constructor from an existing texture. Moves given texture to from which it was called.
 ***
 ```cpp
-Texture(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding)
+Texture(const uint32_t cWidth, const uint32_t cHeight, ImageFormat cFormat, uint32_t cSetIndex, uint32_t cBinding)
 ```
-Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, format is an image format, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
+Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, cFormat is an image format, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
 ***
 ```cpp
-void create(const uint32_t width, const uint32_t height, ImageFormat format, uint32_t cSetIndex, uint32_t cBinding)
+void create(const uint32_t cWidth, const uint32_t cHeight, ImageFormat cFormat, uint32_t cSetIndex, uint32_t cBinding)
 ```
 Creation function. Must be called only once and only if the texture was created using default constructor.
 ***
@@ -272,14 +272,14 @@ Window()
 Default constructor. Doesn't init anything.
 ***
 ```cpp
-Window(const uint32_t cWidth, const uint32_t cHeight, const std::string title)
+Window(const uint32_t cWidth, const uint32_t cHeight, const std::string cTitle, const DrawOptions cOptions)
 ```
-Constructor. Creates window from given parameters: width, height and title of the window.
+Constructor. Creates window from given parameters: width, height, title and draw options of the window.
 ***
 ```cpp
-void create(const uint32_t cWidth, const uint32_t cHeight, const std::string title)
+void create(const uint32_t cWidth, const uint32_t cHeight, const std::string cTitle, const DrawOptions cOptions)
 ```
-Creates window from given parameters: width, height and title of the window. Must be called only once and only if the object was created using default constructor.
+Creates window from given parameters: width, height, title and draw options of the window. Must be called only once and only if the object was created using default constructor.
 ***
 ```cpp
 void draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders)
@@ -389,4 +389,22 @@ enum class ImageFormat
 };
 ```
 ImageFormat enumeration class specifes the format of image with following syntax: R, G, B and A letters indicate channel order and availability and number sets the number of bits per channel.
+***
+```cpp
+enum class CullMode
+{
+  Clockwise,
+  CounterClockwise,
+  None
+}
+```
+CullMode enumeration class specifies the way back face culling will be performed. If ```CullMode``` is set to None, no culling will be performed; if ```CullMode``` is set to Clockwise, all primitives with clockwise vertex order will be **discarded**; if ```CullMode``` is set to CounterClockwise, all primitives with counter-clockwise vertex order will be **discarded**.
+***
+```cpp
+struct DrawOptions
+{
+  CullMode cullMode;
+}
+```
+DrawOptions structure specifies additional window drawing options. For now, you can only specify the way of vertex culling.
 ***
