@@ -57,7 +57,7 @@ namespace spk
         if(drawComponents.count(key) == 0)
         {
             drawComponents[key] = {vk::Pipeline(), resources, vertexBuffer, shaders};
-            createPipeline(drawComponents[key].pipeline, shaders->getShaderStages(), vertexBuffer->getAlignmentInfo(), resources->getPipelineLayout());
+            createPipeline(drawComponents[key].pipeline, shaders->getShaderStages(), vertexBuffer->getAlignmentInfos(), resources->getPipelineLayout());
         }
         if(currentPipeline != key)
         {
@@ -136,11 +136,14 @@ namespace spk
             commandBuffer.beginRenderPass(&renderPassInfo, vk::SubpassContents());
 
             vk::DeviceSize offset = 0;
-            const vk::Buffer& vb = drawComponents.vertices->getVertexBuffer();
-            const uint32_t vbSize = drawComponents.vertices->getVertexBufferSize();
+            const std::vector<VertexAlignmentInfo>& alignmentInfos = drawComponents.vertices->getAlignmentInfos();
             const uint32_t ibSize = drawComponents.vertices->getIndexBufferSize();
-            const VertexAlignmentInfo alignmentInfo = drawComponents.vertices->getAlignmentInfo();
-            commandBuffer.bindVertexBuffers(alignmentInfo.binding, 1, &vb, &offset);
+            for(const auto& alignment : alignmentInfos)
+            {
+                const vk::Buffer& vb = drawComponents.vertices->getVertexBuffer(alignment.binding);
+                const uint32_t vbSize = drawComponents.vertices->getVertexBufferSize(alignment.binding);
+                commandBuffer.bindVertexBuffers(alignment.binding, 1, &vb, &offset);
+            }
             if(ibSize != 0)
             {
                 const vk::Buffer& ib = drawComponents.vertices->getIndexBuffer();
@@ -150,11 +153,12 @@ namespace spk
 
             if(ibSize != 0)
             {
-                commandBuffer.drawIndexed(ibSize / 4, 1, 0, 0, 0);
+                commandBuffer.drawIndexed(ibSize / sizeof(uint32_t), 1, 0, 0, 0);
             }
             else
             {
-                commandBuffer.draw(vbSize / alignmentInfo.structSize, 1, 0, 0);
+                uint32_t vertexCount = drawComponents.vertices->getVertexBufferSize(alignmentInfos[0].binding) / alignmentInfos[0].structSize;
+                commandBuffer.draw(vertexCount, 1, 0, 0);
             }
 
             commandBuffer.endRenderPass();
@@ -163,23 +167,13 @@ namespace spk
         }
     }
 
-    void Window::createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const VertexAlignmentInfo& vertexAlignmentInfo, const vk::PipelineLayout& layout)
+    std::pair<vk::VertexInputBindingDescription, std::vector<vk::VertexInputAttributeDescription> > Window::createPipelineVertexInputStateBase(const VertexAlignmentInfo& vertexAlignmentInfo)
     {
-        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
-
-        vk::GraphicsPipelineCreateInfo pipelineInfo;
-
-        pipelineInfo.setStageCount(shaderStageInfos.size());
-        pipelineInfo.setPStages(shaderStageInfos.data());
-        
-        vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
-        vertexInputInfo.setVertexBindingDescriptionCount(1);
         vk::VertexInputBindingDescription bindingDesc;
         bindingDesc.setBinding(vertexAlignmentInfo.binding);
         bindingDesc.setInputRate(vk::VertexInputRate::eVertex);
         bindingDesc.setStride(vertexAlignmentInfo.structSize);
-        vertexInputInfo.setPVertexBindingDescriptions(&bindingDesc);
-        
+
         std::vector<vk::VertexInputAttributeDescription> attributeDescriptions(vertexAlignmentInfo.fields.size());
         for(int i = 0; i < attributeDescriptions.size(); ++i)
         {
@@ -238,6 +232,33 @@ namespace spk
                 break;
             }
         }
+        return {bindingDesc, attributeDescriptions};
+    }
+
+    void Window::createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const std::vector<VertexAlignmentInfo>& vertexAlignmentInfos, const vk::PipelineLayout& layout)
+    {
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+
+        vk::GraphicsPipelineCreateInfo pipelineInfo;
+
+        pipelineInfo.setStageCount(shaderStageInfos.size());
+        pipelineInfo.setPStages(shaderStageInfos.data());
+        
+        vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
+
+        std::vector<vk::VertexInputBindingDescription> bindingDescriptions(vertexAlignmentInfos.size());
+        std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
+
+        for(int i = 0; i < bindingDescriptions.size(); ++i)
+        {
+            auto base = createPipelineVertexInputStateBase(vertexAlignmentInfos[i]);
+            bindingDescriptions[i] = base.first;
+            attributeDescriptions.insert(attributeDescriptions.end(), base.second.begin(), base.second.end());
+        }
+
+        vertexInputInfo.setVertexBindingDescriptionCount(bindingDescriptions.size());
+        vertexInputInfo.setPVertexBindingDescriptions(bindingDescriptions.data());
+        
         vertexInputInfo.setVertexAttributeDescriptionCount(attributeDescriptions.size());
         vertexInputInfo.setPVertexAttributeDescriptions(attributeDescriptions.data());
 

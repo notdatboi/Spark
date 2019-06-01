@@ -6,9 +6,9 @@ namespace spk
 
     VertexBuffer::VertexBuffer(): identifier(count) {++count;}
 
-    VertexBuffer::VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize): 
-        alignmentInfo(cAlignmentInfo), 
-        vertexBufferSize(cVertexBufferSize), 
+    VertexBuffer::VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize): 
+        alignmentInfos(cAlignmentInfos), 
+        vertexBufferSizes(cVertexBufferSizes),
         indexBufferSize(cIndexBufferSize),
         identifier(count)
     {
@@ -19,31 +19,28 @@ namespace spk
     VertexBuffer::VertexBuffer(const VertexBuffer& vb): identifier(count)
     {
         ++count;
-        create(vb.alignmentInfo, vb.vertexBufferSize, vb.indexBufferSize);
+        create(vb.alignmentInfos, vb.vertexBufferSizes, vb.indexBufferSize);
     }
 
     VertexBuffer::VertexBuffer(VertexBuffer&& vb): identifier(vb.identifier)
     {
         vb.transferred = true;
-        alignmentInfo = std::move(vb.alignmentInfo);
-        vertexBufferSize = std::move(vb.vertexBufferSize);
+        alignmentInfos = std::move(vb.alignmentInfos);
+        vertexBufferSizes = std::move(vb.vertexBufferSizes);
         indexBufferSize = std::move(vb.indexBufferSize);
-        vertexMemoryData = std::move(vb.vertexMemoryData);
         indexMemoryData = std::move(vb.indexMemoryData);
-        vertexBuffer = std::move(vb.vertexBuffer);
+        vertexBuffers = std::move(vb.vertexBuffers);
         indexBuffer = std::move(vb.indexBuffer);
-        vertexBufferUpdatedFence = std::move(vb.vertexBufferUpdatedFence);
-        vertexBufferUpdatedSemaphore = std::move(vb.vertexBufferUpdatedSemaphore);
         indexBufferUpdatedFence = std::move(vb.indexBufferUpdatedFence);
         indexBufferUpdatedSemaphore = std::move(vb.indexBufferUpdatedSemaphore);
     }
 
-    void VertexBuffer::create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize)
+    void VertexBuffer::create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize)
     {
         identifier = count;
         ++count;
-        alignmentInfo = cAlignmentInfo;
-        vertexBufferSize = cVertexBufferSize;
+        alignmentInfos = cAlignmentInfos;
+        vertexBufferSizes = cVertexBufferSizes;
         indexBufferSize = cIndexBufferSize;
         init();
     }
@@ -53,9 +50,9 @@ namespace spk
         return identifier;
     }
 
-    const vk::Buffer& VertexBuffer::getVertexBuffer() const 
+    const vk::Buffer& VertexBuffer::getVertexBuffer(const uint32_t binding) const
     {
-        return vertexBuffer;
+        return vertexBuffers.at(binding).buffer;
     }
 
     const vk::Buffer& VertexBuffer::getIndexBuffer() const
@@ -63,9 +60,9 @@ namespace spk
         return indexBuffer;
     }
 
-    const uint32_t VertexBuffer::getVertexBufferSize() const
+    const uint32_t VertexBuffer::getVertexBufferSize(const uint32_t binding) const
     {
-        return vertexBufferSize;
+        return vertexBuffers.at(binding).size;
     }
 
     const uint32_t VertexBuffer::getIndexBufferSize() const
@@ -78,9 +75,9 @@ namespace spk
         return &indexBufferUpdatedFence;
     }
 
-    const vk::Fence* VertexBuffer::getVertexBufferFence() const
+    const vk::Fence* VertexBuffer::getVertexBufferFence(const uint32_t binding) const
     {
-        return &vertexBufferUpdatedFence;
+        return &vertexBuffers.at(binding).updatedFence;
     }
 
     const vk::Semaphore* VertexBuffer::getIndexBufferSemaphore() const
@@ -88,20 +85,20 @@ namespace spk
         return &indexBufferUpdatedSemaphore;
     }
 
-    const vk::Semaphore* VertexBuffer::getVertexBufferSemaphore() const
+    const vk::Semaphore* VertexBuffer::getVertexBufferSemaphore(const uint32_t binding) const
     {
-        return &vertexBufferUpdatedSemaphore;
+        return &(vertexBuffers.at(binding).updatedSemaphore);
     }
 
-    const VertexAlignmentInfo& VertexBuffer::getAlignmentInfo() const
+    const std::vector<VertexAlignmentInfo>& VertexBuffer::getAlignmentInfos() const
     {
-        return alignmentInfo;
+        return alignmentInfos;
     }
 
     VertexBuffer& VertexBuffer::operator=(const VertexBuffer& rBuffer)
     {
         destroy();
-        create(rBuffer.alignmentInfo, rBuffer.vertexBufferSize, rBuffer.indexBufferSize);
+        create(rBuffer.alignmentInfos, rBuffer.vertexBufferSizes, rBuffer.indexBufferSize);
         identifier = count;
         ++count;
         return *this;
@@ -110,7 +107,7 @@ namespace spk
     VertexBuffer& VertexBuffer::operator=(VertexBuffer& rBuffer)
     {
         destroy();
-        create(rBuffer.alignmentInfo, rBuffer.vertexBufferSize, rBuffer.indexBufferSize);
+        create(rBuffer.alignmentInfos, rBuffer.vertexBufferSizes, rBuffer.indexBufferSize);
         identifier = count;
         ++count;
         return *this;
@@ -121,15 +118,12 @@ namespace spk
         destroy();
         identifier = rBuffer.identifier;
         rBuffer.transferred = true;
-        alignmentInfo = std::move(rBuffer.alignmentInfo);
-        vertexBufferSize = std::move(rBuffer.vertexBufferSize);
+        alignmentInfos = std::move(rBuffer.alignmentInfos);
+        vertexBufferSizes = std::move(rBuffer.vertexBufferSizes);
         indexBufferSize = std::move(rBuffer.indexBufferSize);
-        vertexMemoryData = std::move(rBuffer.vertexMemoryData);
         indexMemoryData = std::move(rBuffer.indexMemoryData);
-        vertexBuffer = std::move(rBuffer.vertexBuffer);
+        vertexBuffers = std::move(rBuffer.vertexBuffers);
         indexBuffer = std::move(rBuffer.indexBuffer);
-        vertexBufferUpdatedFence = std::move(rBuffer.vertexBufferUpdatedFence);
-        vertexBufferUpdatedSemaphore = std::move(rBuffer.vertexBufferUpdatedSemaphore);
         indexBufferUpdatedFence = std::move(rBuffer.indexBufferUpdatedFence);
         indexBufferUpdatedSemaphore = std::move(rBuffer.indexBufferUpdatedSemaphore);
         return *this;
@@ -139,35 +133,44 @@ namespace spk
     {
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         const vk::CommandPool& commandPool = system::Executives::getInstance()->getPool();
-
-        vk::BufferCreateInfo vBufferInfo;
-        vBufferInfo.setSize(vertexBufferSize);
-        vBufferInfo.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
-        vBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
-        vBufferInfo.setQueueFamilyIndexCount(1);
         uint32_t queueFamIndex = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
-        vBufferInfo.setPQueueFamilyIndices(&queueFamIndex);
-        if(logicalDevice.createBuffer(&vBufferInfo, nullptr, &vertexBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create buffer!\n");
-
-        vk::MemoryRequirements vBufferMemoryReq;
-        logicalDevice.getBufferMemoryRequirements(vertexBuffer, &vBufferMemoryReq);
-        system::MemoryAllocationInfo vAllocInfo;
-        vAllocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
-        vAllocInfo.size = vBufferMemoryReq.size;
-        vAllocInfo.memoryTypeBits = vBufferMemoryReq.memoryTypeBits;
-        vAllocInfo.alignment = vBufferMemoryReq.alignment;
-        vertexMemoryData = system::MemoryManager::getInstance()->allocateMemoryLazy(vAllocInfo);
-
         vk::FenceCreateInfo fenceInfo;
-        if(logicalDevice.createFence(&fenceInfo, nullptr, &vertexBufferUpdatedFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
         vk::SemaphoreCreateInfo semaphoreInfo;
-        if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &vertexBufferUpdatedSemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
-
         vk::CommandBufferAllocateInfo commandInfo;
         commandInfo.setCommandBufferCount(1);
         commandInfo.setCommandPool(commandPool);
         commandInfo.setLevel(vk::CommandBufferLevel::ePrimary);
-        if(logicalDevice.allocateCommandBuffers(&commandInfo, &vertexUpdateCommandBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to allocate command buffer!\n");
+
+        for(int i = 0; i < alignmentInfos.size(); ++i)
+        {
+            vertexBuffers[alignmentInfos[i].binding] = VertexBufferInfo();
+            vertexBuffers[alignmentInfos[i].binding].size = vertexBufferSizes[i];
+        }
+
+        for(auto& vb : vertexBuffers)
+        {
+            vk::BufferCreateInfo vBufferInfo;
+            vBufferInfo.setSize(vb.second.size);
+            vBufferInfo.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+            vBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
+            vBufferInfo.setQueueFamilyIndexCount(1);
+            vBufferInfo.setPQueueFamilyIndices(&queueFamIndex);
+            if(logicalDevice.createBuffer(&vBufferInfo, nullptr, &vb.second.buffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create buffer!\n");
+
+            vk::MemoryRequirements vBufferMemoryReq;
+            logicalDevice.getBufferMemoryRequirements(vb.second.buffer, &vBufferMemoryReq);
+            system::MemoryAllocationInfo vAllocInfo;
+            vAllocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
+            vAllocInfo.size = vBufferMemoryReq.size;
+            vAllocInfo.memoryTypeBits = vBufferMemoryReq.memoryTypeBits;
+            vAllocInfo.alignment = vBufferMemoryReq.alignment;
+            vb.second.memoryData = system::MemoryManager::getInstance()->allocateMemoryLazy(vAllocInfo);
+
+            if(logicalDevice.createFence(&fenceInfo, nullptr, &vb.second.updatedFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
+            if(logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &vb.second.updatedSemaphore) != vk::Result::eSuccess) throw std::runtime_error("Failed to create semaphore!\n");
+
+            if(logicalDevice.allocateCommandBuffers(&commandInfo, &vb.second.updateCommandBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to allocate command buffer!\n");
+        }
 
         if(indexBufferSize != 0)
         {
@@ -195,24 +198,25 @@ namespace spk
         }
     }
 
-    void VertexBuffer::updateVertexBuffer(const void* data)
+    void VertexBuffer::updateVertexBuffer(const void* data, uint32_t binding)
     {
-        update(data, true);
+        update(data, true, binding);
     }
 
     void VertexBuffer::updateIndexBuffer(const void* data)
     {
         if(indexBufferSize == 0) throw std::runtime_error("Trying to update empty index buffer.\n");
-        update(data, false);
+        update(data, false, 0);
     }
 
-    void VertexBuffer::update(const void* data, bool vertex)
+    void VertexBuffer::update(const void* data, bool vertex, const uint32_t binding)
     {
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         const vk::Queue& graphicsQueue = system::Executives::getInstance()->getGraphicsQueue();
-        const vk::CommandBuffer& updateCommandBuffer = vertex ? vertexUpdateCommandBuffer : indexUpdateCommandBuffer;
+        const vk::CommandBuffer& updateCommandBuffer = vertex ? vertexBuffers[binding].updateCommandBuffer : indexUpdateCommandBuffer;
 
         bindMemory();
+
         vk::Buffer transmissionBuffer;
         vk::BufferCreateInfo transmissionBufferInfo;
         transmissionBufferInfo.setQueueFamilyIndexCount(1);
@@ -220,7 +224,7 @@ namespace spk
         transmissionBufferInfo.setPQueueFamilyIndices(&index);
         transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
         transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
-        transmissionBufferInfo.setSize(vertex ? vertexBufferSize : indexBufferSize);
+        transmissionBufferInfo.setSize(vertex ? vertexBuffers[binding].size : indexBufferSize);
         if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
 
         vk::MemoryRequirements transmissionBufferMemoryRequirements;
@@ -236,7 +240,7 @@ namespace spk
         if(logicalDevice.bindBufferMemory(transmissionBuffer, transmissionBufferMemory, transmissionBufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
         void * mappedMemory;
         if(logicalDevice.mapMemory(transmissionBufferMemory, transmissionBufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
-        memcpy(mappedMemory, data, vertex ? vertexBufferSize : indexBufferSize);
+        memcpy(mappedMemory, data, vertex ? vertexBuffers[binding].size : indexBufferSize);
         logicalDevice.unmapMemory(transmissionBufferMemory);
 
         vk::CommandBufferBeginInfo commandBufferInfo;
@@ -247,8 +251,8 @@ namespace spk
         vk::BufferCopy transmissionCopyData;
         transmissionCopyData.setSrcOffset(0);
         transmissionCopyData.setDstOffset(0);
-        transmissionCopyData.setSize(vertex ? vertexBufferSize : indexBufferSize);
-        updateCommandBuffer.copyBuffer(transmissionBuffer, vertex ? vertexBuffer : indexBuffer, 1, &transmissionCopyData);
+        transmissionCopyData.setSize(vertex ? vertexBuffers[binding].size : indexBufferSize);
+        updateCommandBuffer.copyBuffer(transmissionBuffer, vertex ? vertexBuffers[binding].buffer : indexBuffer, 1, &transmissionCopyData);
 
         updateCommandBuffer.end();
 
@@ -256,15 +260,15 @@ namespace spk
         submitInfo.setCommandBufferCount(1);
         submitInfo.setPCommandBuffers(&updateCommandBuffer);
         submitInfo.setSignalSemaphoreCount(1);                 
-        submitInfo.setPSignalSemaphores(vertex ? &vertexBufferUpdatedSemaphore : &indexBufferUpdatedSemaphore);
+        submitInfo.setPSignalSemaphores(vertex ? &vertexBuffers[binding].updatedSemaphore : &indexBufferUpdatedSemaphore);
         submitInfo.setWaitSemaphoreCount(0);                   
         submitInfo.setPWaitSemaphores(nullptr);                 
         vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eVertexInput;
         submitInfo.setPWaitDstStageMask(&dstStageFlags);
 
-        graphicsQueue.submit(1, &submitInfo, vertex ? vertexBufferUpdatedFence : indexBufferUpdatedFence);
+        graphicsQueue.submit(1, &submitInfo, vertex ? vertexBuffers[binding].updatedFence : indexBufferUpdatedFence);
 
-        logicalDevice.waitForFences(1, vertex ? &vertexBufferUpdatedFence : &indexBufferUpdatedFence, true, ~0U);              //  move the sync operations out of here
+        logicalDevice.waitForFences(1, vertex ? &vertexBuffers[binding].updatedFence : &indexBufferUpdatedFence, true, ~0U);              //  move the sync operations out of here
         if(updateCommandBuffer.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
         system::MemoryManager::getInstance()->freeMemory(transmissionBufferData.index);
@@ -276,14 +280,17 @@ namespace spk
         if(!memoryBound)
         {
             const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
-            const vk::DeviceMemory& vertexBufferMemory = system::MemoryManager::getInstance()->getMemory(vertexMemoryData.index);
             if(indexBufferSize != 0)
             {
                 const vk::DeviceMemory& indexBufferMemory = system::MemoryManager::getInstance()->getMemory(indexMemoryData.index);
                 if(logicalDevice.bindBufferMemory(indexBuffer, system::MemoryManager::getInstance()->getMemory(indexMemoryData.index), indexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
             }
 
-            if(logicalDevice.bindBufferMemory(vertexBuffer, system::MemoryManager::getInstance()->getMemory(vertexMemoryData.index), vertexMemoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
+            for(auto& vb : vertexBuffers)
+            {
+                const vk::DeviceMemory& vertexBufferMemory = system::MemoryManager::getInstance()->getMemory(vb.second.memoryData.index);
+                if(logicalDevice.bindBufferMemory(vb.second.buffer, vertexBufferMemory, vb.second.memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind buffer memory!\n");
+            }
             memoryBound = true;
         }
     }
@@ -291,16 +298,19 @@ namespace spk
     void VertexBuffer::destroy()
     {
         if(transferred) return;
-        if(vertexBuffer.operator VkBuffer() == VK_NULL_HANDLE && indexBuffer.operator VkBuffer() == VK_NULL_HANDLE) return;
+        if(!vertexBuffers.begin()->second.buffer && !indexBuffer) return;
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
 
-        logicalDevice.destroyBuffer(vertexBuffer, nullptr);
-        system::MemoryManager::getInstance()->freeMemory(vertexMemoryData.index);
-        vertexBuffer = VkBuffer(0);
-        logicalDevice.destroyFence(vertexBufferUpdatedFence, nullptr);
-        vertexBufferUpdatedFence = VkFence(0);
-        logicalDevice.destroySemaphore(vertexBufferUpdatedSemaphore, nullptr);
-        vertexBufferUpdatedSemaphore = VkSemaphore(0);
+        for(auto& vb : vertexBuffers)
+        {
+            logicalDevice.destroyBuffer(vb.second.buffer, nullptr);
+            vb.second.buffer = vk::Buffer();
+            system::MemoryManager::getInstance()->freeMemory(vb.second.memoryData.index);
+            logicalDevice.destroyFence(vb.second.updatedFence, nullptr);
+            vb.second.updatedFence = vk::Fence();
+            logicalDevice.destroySemaphore(vb.second.updatedSemaphore, nullptr);
+            vb.second.updatedSemaphore = vk::Semaphore();
+        }
 
         if(indexBufferSize != 0)
         {

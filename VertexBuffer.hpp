@@ -52,9 +52,9 @@ namespace spk
         VertexBuffer();
         VertexBuffer(const VertexBuffer& vb);
         VertexBuffer(VertexBuffer&& vb);
-        VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0);
-        void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0);
-        void updateVertexBuffer(const void * data);           // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
+        VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
+        void create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
+        void updateVertexBuffer(const void * data, const uint32_t binding);           // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         void updateIndexBuffer(const void * data);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         VertexBuffer& operator=(const VertexBuffer& rBuffer);
         VertexBuffer& operator=(VertexBuffer& rBuffer);
@@ -63,36 +63,53 @@ namespace spk
     private:
         friend class Window;
         const uint32_t getIdentifier() const;
-        const vk::Buffer& getVertexBuffer() const;
+        const vk::Buffer& getVertexBuffer(const uint32_t binding) const;
         const vk::Buffer& getIndexBuffer() const;
-        const VertexAlignmentInfo& getAlignmentInfo() const;
-        const uint32_t getVertexBufferSize() const;
+        const std::vector<VertexAlignmentInfo>& getAlignmentInfos() const;
+        const uint32_t getVertexBufferSize(const uint32_t binding) const;
         const uint32_t getIndexBufferSize() const;
         const vk::Fence* getIndexBufferFence() const;
-        const vk::Fence* getVertexBufferFence() const;
+        const vk::Fence* getVertexBufferFence(const uint32_t binding) const;
         const vk::Semaphore* getIndexBufferSemaphore() const;
-        const vk::Semaphore* getVertexBufferSemaphore() const;
+        const vk::Semaphore* getVertexBufferSemaphore(const uint32_t binding) const;
+
+        struct VertexBufferInfo
+        {
+            VertexBufferInfo(): size(0), memoryData(), updatedFence(), updatedSemaphore(), updateCommandBuffer(), buffer() {}
+            VertexBufferInfo& operator=(const VertexBufferInfo rInfo)
+            {
+                size = rInfo.size;
+                memoryData = rInfo.memoryData;
+                updatedFence = rInfo.updatedFence;
+                updatedSemaphore = rInfo.updatedSemaphore;
+                updateCommandBuffer = rInfo.updateCommandBuffer;
+                buffer = rInfo.buffer;
+                return *this;
+            }
+            uint32_t size;
+            system::AllocatedMemoryData memoryData;
+            vk::Fence updatedFence;
+            vk::Semaphore updatedSemaphore;
+            vk::CommandBuffer updateCommandBuffer;
+            vk::Buffer buffer;
+        };
 
         void bindMemory();
-        VertexAlignmentInfo alignmentInfo;
-        uint32_t vertexBufferSize;
+        std::vector<VertexAlignmentInfo> alignmentInfos;
+        std::vector<uint32_t> vertexBufferSizes;
         uint32_t indexBufferSize;
-        system::AllocatedMemoryData vertexMemoryData;
         system::AllocatedMemoryData indexMemoryData;
-        vk::Buffer vertexBuffer;
+        std::map<uint32_t, VertexBufferInfo> vertexBuffers;
         vk::Buffer indexBuffer;
-        vk::Fence vertexBufferUpdatedFence;
-        vk::Semaphore vertexBufferUpdatedSemaphore;
         vk::Fence indexBufferUpdatedFence;
         vk::Semaphore indexBufferUpdatedSemaphore;
-        vk::CommandBuffer vertexUpdateCommandBuffer;
         vk::CommandBuffer indexUpdateCommandBuffer;
         static uint32_t count;
         uint32_t identifier;
         bool transferred = false;
 
         void init();
-        void update(const void * data, bool vertex);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
+        void update(const void * data, bool vertex, const uint32_t binding = 0);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         void destroy();
     };
 

@@ -67,7 +67,8 @@ namespace spk
         void createSwapchain();
         void createRenderPass();
         void createFramebuffers();
-        void createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const VertexAlignmentInfo& vertexAlignmentInfo, const vk::PipelineLayout& layout);
+        std::pair<vk::VertexInputBindingDescription, std::vector<vk::VertexInputAttributeDescription> > createPipelineVertexInputStateBase(const VertexAlignmentInfo& vertexAlignmentInfo);
+        void createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const std::vector<VertexAlignmentInfo>& vertexAlignmentInfos, const vk::PipelineLayout& layout);
         void createCommandBuffers();
         void initCommandBuffers(DrawComponents& drawComponents);
     };
