@@ -281,7 +281,6 @@ namespace spk
                     imgInfo.setSampler(uniqueSampler);
                     imgInfo.setImageView(textures[binding.second.first].getImageView());
                     imgInfos.push_back(imgInfo);
-                    write.setPImageInfo(&imgInfos.back());
                     write.setPBufferInfo(nullptr);
                 }
                 else
@@ -290,11 +289,28 @@ namespace spk
                     bufInfo.setOffset(0);                                                       // because this is not memory offset, but buffer offset
                     bufInfo.setRange(uniformBuffers[binding.second.first].getSize());
                     bufInfos.push_back(bufInfo);
-                    write.setPBufferInfo(&bufInfos.back());
                     write.setPImageInfo(nullptr);
                 }
                 write.setPTexelBufferView(nullptr);
                 setWrites.push_back(write);
+            }
+        }
+        int i = 0, bufI = 0, imgI = 0;
+        for(const auto& set : setContainmentData)
+        {
+            for(const auto& binding : set.second.bindings)
+            {
+                if(binding.second.second)
+                {
+                    setWrites[i].setPImageInfo(&imgInfos[imgI]);
+                    ++imgI;
+                }
+                else
+                {
+                    setWrites[i].setPBufferInfo(&bufInfos[bufI]);
+                    ++bufI;
+                }
+                ++i;
             }
         }
         logicalDevice.updateDescriptorSets(setWrites.size(), setWrites.data(), 0, nullptr);

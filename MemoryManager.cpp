@@ -178,6 +178,7 @@ namespace spk
                 if(pendingAlloc.second.index == index)
                 {
                     flushLazyAllocationsByFlags(pendingAlloc.second.flags);//throw std::runtime_error("Trying to free memory, that isn't allocated yet!\n");
+                    break;
                 }
             }
             if(memoryPartitionsCount[index] <= 0)
