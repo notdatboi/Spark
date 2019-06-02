@@ -151,14 +151,16 @@ namespace spk
             }
             commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, drawComponents.resources->getPipelineLayout(), 0, drawComponents.resources->getDescriptorSets().size(), drawComponents.resources->getDescriptorSets().data(), 0, nullptr);
 
+            const uint32_t instanceCount = drawComponents.vertices->getInstanceCount(), firstInstance = drawComponents.vertices->getFirstInstance();
+
             if(ibSize != 0)
             {
-                commandBuffer.drawIndexed(ibSize / sizeof(uint32_t), 1, 0, 0, 0);
+                commandBuffer.drawIndexed(ibSize / sizeof(uint32_t), instanceCount, 0, 0, firstInstance);
             }
             else
             {
                 uint32_t vertexCount = drawComponents.vertices->getVertexBufferSize(alignmentInfos[0].binding) / alignmentInfos[0].structSize;
-                commandBuffer.draw(vertexCount, 1, 0, 0);
+                commandBuffer.draw(vertexCount, instanceCount, 0, firstInstance);
             }
 
             commandBuffer.endRenderPass();

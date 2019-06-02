@@ -54,6 +54,7 @@ namespace spk
         VertexBuffer(VertexBuffer&& vb);
         VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
         void create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
+        void setInstancingOptions(const uint32_t count, const uint32_t first);
         void updateVertexBuffer(const void * data, const uint32_t binding);           // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         void updateIndexBuffer(const void * data);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         VertexBuffer& operator=(const VertexBuffer& rBuffer);
@@ -72,6 +73,8 @@ namespace spk
         const vk::Fence* getVertexBufferFence(const uint32_t binding) const;
         const vk::Semaphore* getIndexBufferSemaphore() const;
         const vk::Semaphore* getVertexBufferSemaphore(const uint32_t binding) const;
+        const uint32_t getInstanceCount() const;
+        const uint32_t getFirstInstance() const;
 
         struct VertexBufferInfo
         {
@@ -106,6 +109,8 @@ namespace spk
         vk::CommandBuffer indexUpdateCommandBuffer;
         static uint32_t count;
         uint32_t identifier;
+        uint32_t instanceCount;
+        uint32_t firstInstance;
         bool transferred = false;
 
         void init();

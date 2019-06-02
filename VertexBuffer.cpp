@@ -95,6 +95,22 @@ namespace spk
         return alignmentInfos;
     }
 
+    void VertexBuffer::setInstancingOptions(const uint32_t count, const uint32_t first)
+    {
+        instanceCount = count;
+        firstInstance = first;
+    }
+
+    const uint32_t VertexBuffer::getInstanceCount() const
+    {
+        return instanceCount;
+    }
+
+    const uint32_t VertexBuffer::getFirstInstance() const
+    {
+        return firstInstance;
+    }
+
     VertexBuffer& VertexBuffer::operator=(const VertexBuffer& rBuffer)
     {
         destroy();
@@ -131,6 +147,8 @@ namespace spk
 
     void VertexBuffer::init()
     {
+        instanceCount = 1;
+        firstInstance = 0;
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         const vk::CommandPool& commandPool = system::Executives::getInstance()->getPool();
         uint32_t queueFamIndex = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
