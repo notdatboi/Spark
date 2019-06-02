@@ -225,19 +225,19 @@ VertexBuffer(VertexBuffer&& vb)
 Constructor. Moves given buffer to current.
 ***
 ```cpp
-VertexBuffer(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0)
+VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0)
 ```
-Constructor. Creates vertex buffer using given ```VertexAlignmentInfo```, size of a vertex buffer and size of an index buffer (both in **bytes**). For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0.
+Constructor. Creates vertex buffer using given ```VertexAlignmentInfo```s, sizes of an each vertex buffer binding and size of an index buffer (both in **bytes**). For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0.
 ***
 ```cpp
-void create(const VertexAlignmentInfo& cAlignmentInfo, const uint32_t cVertexBufferSize, const uint32_t cIndexBufferSize = 0)
+void create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0)
 ```
-Creates vertex buffer using given ```VertexAlignmentInfo```, size of a vertex buffer and size of an index buffer. For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0. Must be called only once and only if the object was created using default constructor.
+Creates vertex buffer using given ```VertexAlignmentInfo```s, sizes of an each vertex buffer binding and size of an index buffer. For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0. Must be called only once and only if the object was created using default constructor.
 ***
 ```cpp
-void updateVertexBuffer(const void* data)
+void updateVertexBuffer(const void* data, const uint32_t binding)
 ```
-Writes given data to the vertex buffer.
+Writes given data to the specified vertex buffer binding.
 ***
 ```cpp
 void updateIndexBuffer(const void* data)
