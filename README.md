@@ -235,6 +235,11 @@ void create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::
 Creates vertex buffer using given ```VertexAlignmentInfo```s, sizes of an each vertex buffer binding and size of an index buffer. For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0. Must be called only once and only if the object was created using default constructor.
 ***
 ```cpp
+void setInstancingOptions(const uint32_t count, const uint32_t first)
+```
+Sets count of instances and the index of the first instance. Instances are used (often in combination with uniform buffers) for drawing lots of similar objects that have slightly different parameters. By default count is 1 and first index is 0.
+***
+```cpp
 void updateVertexBuffer(const void* data, const uint32_t binding)
 ```
 Writes given data to the specified vertex buffer binding.
