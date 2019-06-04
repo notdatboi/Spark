@@ -242,33 +242,37 @@ namespace spk
 
     void Texture::update(const void* rawData)
     {
-        memcpy(rawImageData.data(), rawData, rawImageData.size());
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         vk::Buffer transmissionBuffer;
-        vk::BufferCreateInfo transmissionBufferInfo;
-        transmissionBufferInfo.setQueueFamilyIndexCount(1);
-        uint32_t index = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
-        transmissionBufferInfo.setPQueueFamilyIndices(&index);
-        transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
-        transmissionBufferInfo.setSize(imageInfo.extent.width * imageInfo.extent.height * imageInfo.channelCount);
-        transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
-        if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
+        system::AllocatedMemoryData bufferData;
+        if(rawData != nullptr)
+        {
+            memcpy(rawImageData.data(), rawData, rawImageData.size());
+            vk::BufferCreateInfo transmissionBufferInfo;
+            transmissionBufferInfo.setQueueFamilyIndexCount(1);
+            uint32_t index = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
+            transmissionBufferInfo.setPQueueFamilyIndices(&index);
+            transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
+            transmissionBufferInfo.setSize(imageInfo.extent.width * imageInfo.extent.height * imageInfo.channelCount);
+            transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
+            if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
 
-        vk::MemoryRequirements transmissionBufferMemoryRequirements;
-        logicalDevice.getBufferMemoryRequirements(transmissionBuffer, &transmissionBufferMemoryRequirements);
-        system::MemoryAllocationInfo allocInfo;
-        allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;         // TODO: make memory property non-coherent
-        allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
-        allocInfo.size = transmissionBufferMemoryRequirements.size;
-        allocInfo.alignment = transmissionBufferMemoryRequirements.alignment;
-        system::AllocatedMemoryData bufferData = system::MemoryManager::getInstance()->allocateMemory(allocInfo);
-        vk::DeviceMemory& bufferMemory = system::MemoryManager::getInstance()->getMemory(bufferData.index);
+            vk::MemoryRequirements transmissionBufferMemoryRequirements;
+            logicalDevice.getBufferMemoryRequirements(transmissionBuffer, &transmissionBufferMemoryRequirements);
+            system::MemoryAllocationInfo allocInfo;
+            allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;         // TODO: make memory property non-coherent
+            allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
+            allocInfo.size = transmissionBufferMemoryRequirements.size;
+            allocInfo.alignment = transmissionBufferMemoryRequirements.alignment;
+            bufferData = system::MemoryManager::getInstance()->allocateMemory(allocInfo);
+            vk::DeviceMemory& bufferMemory = system::MemoryManager::getInstance()->getMemory(bufferData.index);
 
-        if(logicalDevice.bindBufferMemory(transmissionBuffer, bufferMemory, bufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
-        void * mappedMemory;
-        if(logicalDevice.mapMemory(bufferMemory, bufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
-        memcpy(mappedMemory, rawImageData.data(), transmissionBufferInfo.size);
-        logicalDevice.unmapMemory(bufferMemory);
+            if(logicalDevice.bindBufferMemory(transmissionBuffer, bufferMemory, bufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
+            void * mappedMemory;
+            if(logicalDevice.mapMemory(bufferMemory, bufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
+            memcpy(mappedMemory, rawImageData.data(), transmissionBufferInfo.size);
+            logicalDevice.unmapMemory(bufferMemory);
+        }
 
         logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here (if it is needed)
         if(logicalDevice.resetFences(1, &textureReadyFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset fence!\n");
@@ -308,14 +312,17 @@ namespace spk
         subresource.setLayerCount(1);
         subresource.setMipLevel(0);
 
-        vk::BufferImageCopy copyInfo;
-        copyInfo.setBufferOffset(0);
-        copyInfo.setBufferImageHeight(0);
-        copyInfo.setBufferRowLength(0);
-        copyInfo.setImageExtent(imageInfo.extent);
-        copyInfo.setImageOffset(vk::Offset3D());
-        copyInfo.setImageSubresource(subresource);
-        updateCommandBuffer.copyBufferToImage(transmissionBuffer, image, imageInfo.layout, 1, &copyInfo);
+        if(rawData != nullptr)
+        {
+            vk::BufferImageCopy copyInfo;
+            copyInfo.setBufferOffset(0);
+            copyInfo.setBufferImageHeight(0);
+            copyInfo.setBufferRowLength(0);
+            copyInfo.setImageExtent(imageInfo.extent);
+            copyInfo.setImageOffset(vk::Offset3D());
+            copyInfo.setImageSubresource(subresource);
+            updateCommandBuffer.copyBufferToImage(transmissionBuffer, image, imageInfo.layout, 1, &copyInfo);
+        }
 
         vk::ImageMemoryBarrier imageBarrier;
         imageBarrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
@@ -348,9 +355,11 @@ namespace spk
         graphicsQueue.submit(1, &submitInfo, textureReadyFence);
 
         logicalDevice.waitForFences(1, &textureReadyFence, true, ~0U);              //  move the sync operations out of here (if it is needed)
-
-        logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
-        system::MemoryManager::getInstance()->freeMemory(bufferData.index);
+        if(rawData != nullptr)
+        {
+            logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
+            system::MemoryManager::getInstance()->freeMemory(bufferData.index);
+        }
     }
 
     void Texture::destroy()

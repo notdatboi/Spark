@@ -179,6 +179,7 @@ namespace spk
         for(auto& texture : textures)
         {
             texture.bindMemory();
+            texture.update(nullptr);
         }
     }
 
