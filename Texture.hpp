@@ -4,6 +4,8 @@
 #include"MemoryManager.hpp"
 #include"System.hpp"
 #include"Executives.hpp"
+#include"Image.hpp"
+#include"ImageView.hpp"
 
 namespace spk
 {
@@ -22,12 +24,10 @@ namespace spk
     public:
         Texture();
         Texture(const Texture& txt);
-        Texture(Texture&& txt);
         Texture(const uint32_t cWidth, const uint32_t cHeight, ImageFormat cFormat, uint32_t cSetIndex, uint32_t cBinding);
         void create(const uint32_t cWidth, const uint32_t cHeight, ImageFormat cFormat, uint32_t cSetIndex, uint32_t cBinding);
         Texture& operator=(const Texture& rTexture);
         Texture& operator=(Texture& rTexture);
-        Texture& operator=(Texture&& rTexture);
         void resetSetIndex(const uint32_t newIndex);
         void resetBinding(const uint32_t newBinding);
         ~Texture();
@@ -55,24 +55,25 @@ namespace spk
 
         friend class ResourceSet;
         const vk::ImageView& getImageView() const;
-        vk::ImageView& getImageView();
         const vk::ImageLayout& getLayout() const;
         void bindMemory();
         void update(const void* rawData);
-        const vk::Semaphore* getSemaphore() const;
-        const vk::Fence* getFence() const;
         const uint32_t getSet() const;
         const uint32_t getBinding() const;
 
         ImageInfo imageInfo;
         ImageFormat imageFormat;
-        system::AllocatedMemoryData memoryData;
-        vk::Image image;
-        vk::ImageView view;
-        vk::Fence textureReadyFence;
-        vk::Semaphore textureReadySemaphore;
-        std::vector<unsigned char> rawImageData;
-        vk::CommandBuffer updateCommandBuffer;
+        utils::Image image;
+        utils::ImageView imageView;
+
+        vk::CommandBuffer layoutChangeCB;
+        vk::CommandBuffer imageUpdateCB;
+        vk::Fence safeToCopyFence;
+        vk::Semaphore safeToCopySemaphore;
+        vk::Fence contentProcessedFence;
+        vk::Semaphore contentProcessedSemaphore;
+        vk::Fence safeToSampleFence;
+        vk::Semaphore safeToSampleSemaphore;
 
         uint32_t binding;
         uint32_t setIndex;

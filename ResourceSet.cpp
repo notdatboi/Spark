@@ -60,19 +60,9 @@ namespace spk
         return identifier;
     }
 
-    const std::vector<const vk::Semaphore*>& ResourceSet::getTextureSemaphores() const
-    {
-        return textureSemaphores;
-    }
-
-    const std::vector<const vk::Fence*>& ResourceSet::getTextureFences() const
-    {
-        return textureFences;
-    }
-
     void ResourceSet::update(const uint32_t set, const uint32_t binding, const void* data)
     {
-        uint32_t index = setContainmentData[set].bindings[binding].first;                   // TODO: implement CPU thread synchronization
+        uint32_t index = setContainmentData[set].bindings[binding].first;
         if(setContainmentData[set].bindings[binding].second)
         {
             textures[index].update(data);
@@ -87,14 +77,6 @@ namespace spk
     {
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         const vk::CommandPool& commandPool = system::Executives::getInstance()->getPool();
-
-        textureSemaphores.resize(textures.size());
-        textureFences.resize(textures.size());
-        for(int i = 0; i < textureFences.size(); ++i)
-        {
-            textureSemaphores[i] = textures[i].getSemaphore();
-            textureFences[i] = textures[i].getFence();
-        }
 
         vk::CommandBufferAllocateInfo cbAllocInfo;
         cbAllocInfo.setCommandBufferCount(1);
@@ -179,7 +161,6 @@ namespace spk
         for(auto& texture : textures)
         {
             texture.bindMemory();
-            texture.update(nullptr);
         }
     }
 
