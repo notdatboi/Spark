@@ -71,9 +71,9 @@ namespace spk
         return binding;
     }
 
-    const vk::ImageLayout& Texture::getLayout() const
+    const vk::ImageLayout Texture::getLayout() const
     {
-        return imageInfo.layout;
+        return image.getLayout();
     }
 
     Texture::Texture(){}
@@ -157,9 +157,12 @@ namespace spk
 
     void Texture::bindMemory()
     {
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         image.bindMemory();
         image.changeLayout(layoutChangeCB, vk::ImageLayout::eShaderReadOnlyOptimal, vk::Semaphore(), contentProcessedSemaphore, vk::Fence(), contentProcessedFence);
+        if(logicalDevice.waitForFences(1, &contentProcessedFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
         if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
+
         imageView.create(image.getImage(), image.getFormat(), image.getSubresource());
     }
 
@@ -194,12 +197,12 @@ namespace spk
         logicalDevice.unmapMemory(bufferMemory);
 
         image.changeLayout(layoutChangeCB, vk::ImageLayout::eTransferDstOptimal, contentProcessedSemaphore, safeToCopySemaphore, contentProcessedFence, safeToCopyFence);
-        if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
         image.update(imageUpdateCB, transmissionBuffer, safeToCopySemaphore, safeToSampleSemaphore, safeToCopyFence, safeToSampleFence, vk::PipelineStageFlagBits::eFragmentShader, true);
-        if(imageUpdateCB.reset(vk::CommandBufferResetFlagBits::eReleaseResources) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
-        image.changeLayout(layoutChangeCB, vk::ImageLayout::eShaderReadOnlyOptimal, safeToSampleSemaphore, contentProcessedSemaphore, safeToSampleFence, contentProcessedFence);
         if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
+        image.changeLayout(layoutChangeCB, vk::ImageLayout::eShaderReadOnlyOptimal, safeToSampleSemaphore, contentProcessedSemaphore, safeToSampleFence, contentProcessedFence);
+        if(imageUpdateCB.reset(vk::CommandBufferResetFlagBits::eReleaseResources) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
         if(logicalDevice.waitForFences(1, &contentProcessedFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
+        if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
 
         logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
         system::MemoryManager::getInstance()->freeMemory(bufferData.index);
@@ -227,6 +230,8 @@ namespace spk
             contentProcessedSemaphore = vk::Semaphore();
             logicalDevice.destroySemaphore(safeToSampleSemaphore, nullptr);
             safeToSampleSemaphore = vk::Semaphore();
+            image.destroy();
+            imageView.destroy();
         }
     }
 

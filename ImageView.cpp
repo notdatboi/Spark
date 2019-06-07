@@ -31,6 +31,7 @@ namespace spk
             {
                 const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
                 logicalDevice.destroyImageView(view, nullptr);
+                view = vk::ImageView();
             }
         }
 

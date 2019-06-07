@@ -18,8 +18,12 @@ namespace spk
 
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         vk::SemaphoreCreateInfo semaphoreInfo;
+        std::cout << "Semaphore1: \n";
         logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &safeToPresentSemaphore);
+        std::cout << "Semaphore2: \n";
         logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &safeToRenderSemaphore);
+        std::cout << "Semaphore3: \n";
+        logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &depthMapAvailableSemaphore);
         vk::FenceCreateInfo fenceInfo;
         logicalDevice.createFence(&fenceInfo, nullptr, &safeToRenderFence);
         logicalDevice.createFence(&fenceInfo, nullptr, &safeToPresentFence);
@@ -34,6 +38,7 @@ namespace spk
 
         presentQueue = system::Executives::getInstance()->getPresentQueue(surface);
         createSwapchain();
+        createDepthMap();
         createCommandBuffers();
         createRenderPass();
         createFramebuffers();
@@ -75,14 +80,17 @@ namespace spk
         uint32_t imageIndex;
         if(logicalDevice.acquireNextImageKHR(swapchain, ~0U, safeToRenderSemaphore, safeToRenderFence, &imageIndex) != vk::Result::eSuccess) throw std::runtime_error("Failed to acquire image!\n");
 
+        vk::Semaphore waitSemaphores[] = {safeToRenderSemaphore, depthMapAvailableSemaphore};
+        vk::Semaphore signalSemaphores[] = {safeToPresentSemaphore, depthMapAvailableSemaphore};
+
         vk::PipelineStageFlags renderStageFlags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
         vk::SubmitInfo renderSubmit;
         renderSubmit.setCommandBufferCount(1);
         renderSubmit.setPCommandBuffers(&frameCommandBuffers[imageIndex]);
-        renderSubmit.setSignalSemaphoreCount(1);
-        renderSubmit.setPSignalSemaphores(&safeToPresentSemaphore);
-        renderSubmit.setWaitSemaphoreCount(1);
-        renderSubmit.setPWaitSemaphores(&safeToRenderSemaphore);
+        renderSubmit.setSignalSemaphoreCount(2);
+        renderSubmit.setPSignalSemaphores(signalSemaphores/*&safeToPresentSemaphore*/);
+        renderSubmit.setWaitSemaphoreCount(2);
+        renderSubmit.setPWaitSemaphores(waitSemaphores);
         renderSubmit.setPWaitDstStageMask(&renderStageFlags);
 
         if(logicalDevice.waitForFences(1, &safeToRenderFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
@@ -118,21 +126,21 @@ namespace spk
 
             commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawComponents.pipeline);
 
-            vk::ClearValue clear;
+            vk::ClearValue clearValues[2];
             vk::ClearColorValue clearColorValue;
             vk::ClearDepthStencilValue clearDSValue;
             clearColorValue.setUint32({0, 0, 0, 0});
-            clear.setColor(clearColorValue);
-            clearDSValue.setDepth(0);
+            clearValues[0].setColor(clearColorValue);
+            clearDSValue.setDepth(1.0f);
             clearDSValue.setStencil(0);
-            clear.setDepthStencil(clearDSValue);
+            clearValues[1].setDepthStencil(clearDSValue);
 
             vk::RenderPassBeginInfo renderPassInfo;
             renderPassInfo.setRenderPass(renderPass);
             renderPassInfo.setFramebuffer(framebuffers[i]);
             renderPassInfo.setRenderArea(vk::Rect2D({0, 0}, {width, height}));
-            renderPassInfo.setClearValueCount(1);
-            renderPassInfo.setPClearValues(&clear);
+            renderPassInfo.setClearValueCount(2);
+            renderPassInfo.setPClearValues(clearValues);
             commandBuffer.beginRenderPass(&renderPassInfo, vk::SubpassContents());
 
             vk::DeviceSize offset = 0;
@@ -326,7 +334,11 @@ namespace spk
         pipelineInfo.setPMultisampleState(&multisampleInfo);
 
         vk::PipelineDepthStencilStateCreateInfo depthStencilInfo;
-        depthStencilInfo.setDepthTestEnable(false);
+        depthStencilInfo.setDepthTestEnable(true);
+        depthStencilInfo.setDepthWriteEnable(true);
+        depthStencilInfo.setDepthCompareOp(vk::CompareOp::eLess);
+        depthStencilInfo.setDepthBoundsTestEnable(false);
+        depthStencilInfo.setStencilTestEnable(false);
 
         pipelineInfo.setPDepthStencilState(&depthStencilInfo);
 
@@ -421,36 +433,83 @@ namespace spk
         }
     }
 
+    void Window::createDepthMap()
+    {
+        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        const vk::CommandPool& pool = system::Executives::getInstance()->getPool();
+        vk::CommandBuffer depthMapLayoutChangeCB;
+        vk::CommandBufferAllocateInfo commandBufferAllocationInfo;
+        commandBufferAllocationInfo.setCommandBufferCount(1);
+        commandBufferAllocationInfo.setCommandPool(pool);
+        commandBufferAllocationInfo.setLevel(vk::CommandBufferLevel::ePrimary);
+        logicalDevice.allocateCommandBuffers(&commandBufferAllocationInfo, &depthMapLayoutChangeCB);
+
+        vk::Fence depthMapAvailableFence;
+        vk::FenceCreateInfo fenceInfo;
+        logicalDevice.createFence(&fenceInfo, nullptr, &depthMapAvailableFence);
+
+        std::optional<vk::Format> format;
+        std::vector<vk::Format> formats = {vk::Format::eD32Sfloat, vk::Format::eD16Unorm, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint, vk::Format::eD16UnormS8Uint};
+        format = utils::Image::getSupportedFormat(formats, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+        if(!format.has_value()) throw std::runtime_error("Failed to pick format!\n");
+        depthMapFormat = format.value();
+        depthMap.create({width, height, 1}, depthMapFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageAspectFlagBits::eDepth);
+        depthMap.bindMemory();
+        depthMap.changeLayout(depthMapLayoutChangeCB, vk::ImageLayout::eDepthStencilAttachmentOptimal, vk::Semaphore(), depthMapAvailableSemaphore, vk::Fence(), depthMapAvailableFence);
+
+        if(logicalDevice.waitForFences(1, &depthMapAvailableFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
+        logicalDevice.destroyFence(depthMapAvailableFence, nullptr);
+        logicalDevice.freeCommandBuffers(pool, 1, &depthMapLayoutChangeCB);
+
+        depthMapView.create(depthMap.getImage(), depthMapFormat, depthMap.getSubresource());
+    }
+
     void Window::createRenderPass()
     {
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
 
-        vk::AttachmentDescription attachment;
-        attachment.setFormat(surfaceFormat.format);
-        attachment.setSamples(vk::SampleCountFlagBits::e1);
-        attachment.setLoadOp(vk::AttachmentLoadOp::eClear);
-        attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
-        attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
-        attachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
-        attachment.setInitialLayout(vk::ImageLayout::eUndefined);          
-        attachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+        vk::AttachmentDescription colorAttachment;
+        colorAttachment.setFormat(surfaceFormat.format);
+        colorAttachment.setSamples(vk::SampleCountFlagBits::e1);
+        colorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);
+        colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);
+        colorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
+        colorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+        colorAttachment.setInitialLayout(vk::ImageLayout::eUndefined);          
+        colorAttachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
 
-        vk::AttachmentReference attachmentReference;
-        attachmentReference.setAttachment(0);
-        attachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+        vk::AttachmentDescription depthAttachment;
+        depthAttachment.setFormat(depthMapFormat);
+        depthAttachment.setSamples(vk::SampleCountFlagBits::e1);
+        depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);
+        depthAttachment.setStoreOp(vk::AttachmentStoreOp::eDontCare);
+        depthAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
+        depthAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+        depthAttachment.setInitialLayout(vk::ImageLayout::eUndefined);
+        depthAttachment.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+        vk::AttachmentDescription attachments[] = {colorAttachment, depthAttachment};
+
+        vk::AttachmentReference colorAttachmentReference;
+        colorAttachmentReference.setAttachment(0);
+        colorAttachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+        vk::AttachmentReference depthAttachmentReference;
+        depthAttachmentReference.setAttachment(1);
+        depthAttachmentReference.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
         vk::SubpassDescription subpassDesc;
         subpassDesc.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
         subpassDesc.setInputAttachmentCount(0);
         subpassDesc.setColorAttachmentCount(1);
-        subpassDesc.setPColorAttachments(&attachmentReference);
+        subpassDesc.setPColorAttachments(&colorAttachmentReference);
         subpassDesc.setPResolveAttachments(nullptr);
-        subpassDesc.setPDepthStencilAttachment(nullptr);
+        subpassDesc.setPDepthStencilAttachment(&depthAttachmentReference);
         subpassDesc.setPreserveAttachmentCount(0);
 
         vk::RenderPassCreateInfo info;
-        info.setAttachmentCount(1);
-        info.setPAttachments(&attachment);
+        info.setAttachmentCount(2);
+        info.setPAttachments(attachments);
         info.setSubpassCount(1);
         info.setPSubpasses(&subpassDesc);
         info.setDependencyCount(0);
@@ -465,10 +524,11 @@ namespace spk
         int i = 0;
         for(auto& fb : framebuffers)
         {
+            vk::ImageView views[] = {swapchainImageViews[i], depthMapView.getView()};
             vk::FramebufferCreateInfo info;
             info.setRenderPass(renderPass);
-            info.setAttachmentCount(1);
-            info.setPAttachments(&swapchainImageViews[i]);
+            info.setAttachmentCount(2);
+            info.setPAttachments(views);
             info.setWidth(width);
             info.setHeight(height);
             info.setLayers(1);
@@ -499,8 +559,9 @@ namespace spk
             logicalDevice.destroySemaphore(safeToPresentSemaphore, nullptr);
             safeToPresentSemaphore = vk::Semaphore();
             logicalDevice.destroySemaphore(safeToRenderSemaphore, nullptr);
-            logicalDevice.destroyFence(safeToPresentFence, nullptr);
+            logicalDevice.destroySemaphore(depthMapAvailableSemaphore, nullptr);
             logicalDevice.destroyFence(safeToRenderFence, nullptr);
+            logicalDevice.destroyFence(safeToPresentFence, nullptr);
             for(auto& fb : framebuffers)
             {
                 logicalDevice.destroyFramebuffer(fb, nullptr);
@@ -514,6 +575,8 @@ namespace spk
             {
                 logicalDevice.destroyImageView(view, nullptr);
             }
+            depthMap.destroy();
+            depthMapView.destroy();
             logicalDevice.destroySwapchainKHR(swapchain, nullptr);
             instance.destroySurfaceKHR(surface, nullptr);
             glfwDestroyWindow(window);

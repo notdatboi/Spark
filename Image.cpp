@@ -350,6 +350,7 @@ namespace spk
             {
                 const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
                 logicalDevice.destroyImage(image, nullptr);
+                image = vk::Image();
             }
             if(memoryData.index != (~0) && memoryData.offset != (~0))
             {

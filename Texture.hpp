@@ -55,7 +55,7 @@ namespace spk
 
         friend class ResourceSet;
         const vk::ImageView& getImageView() const;
-        const vk::ImageLayout& getLayout() const;
+        const vk::ImageLayout getLayout() const;
         void bindMemory();
         void update(const void* rawData);
         const uint32_t getSet() const;

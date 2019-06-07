@@ -48,6 +48,9 @@ namespace spk
         vk::SwapchainKHR swapchain;
         std::vector<vk::Image> swapchainImages;
         std::vector<vk::ImageView> swapchainImageViews;
+        utils::Image depthMap;
+        utils::ImageView depthMapView;
+        vk::Format depthMapFormat;
         vk::RenderPass renderPass;
         vk::SurfaceFormatKHR surfaceFormat;
         std::vector<vk::Framebuffer> framebuffers;
@@ -57,6 +60,7 @@ namespace spk
         std::tuple<uint32_t, uint32_t, uint32_t> currentPipeline;
         vk::Fence safeToRenderFence;
         vk::Fence safeToPresentFence;
+        vk::Semaphore depthMapAvailableSemaphore;
         vk::Semaphore safeToRenderSemaphore;
         vk::Semaphore safeToPresentSemaphore;
 
@@ -65,6 +69,7 @@ namespace spk
         DrawOptions options;
 
         void createSwapchain();
+        void createDepthMap();
         void createRenderPass();
         void createFramebuffers();
         std::pair<vk::VertexInputBindingDescription, std::vector<vk::VertexInputAttributeDescription> > createPipelineVertexInputStateBase(const VertexAlignmentInfo& vertexAlignmentInfo);
