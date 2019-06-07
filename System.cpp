@@ -227,6 +227,16 @@ namespace spk
         VKAPI_ATTR VkBool32 VKAPI_CALL System::callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
         {
             #ifdef DEBUG
+            if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+            {
+                std::cout << "Error\n";
+                yeet(pCallbackData->pMessage);
+            }
+            if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+            {
+                std::cout << "Warning\n";
+                yeet(pCallbackData->pMessage);
+            }
             std::cout << "DEBUG INFO: " << pCallbackData->pMessage << '\n';
             #endif
             return false;
