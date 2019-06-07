@@ -28,11 +28,6 @@ Texture(const Texture& txt)
 Constructor from an existing texture. Creates texture, similar to given.
 ***
 ```cpp
-Texture(Texture&& txt)
-```
-Constructor from an existing texture. Moves given texture to from which it was called.
-***
-```cpp
 Texture(const uint32_t cWidth, const uint32_t cHeight, ImageFormat cFormat, uint32_t cSetIndex, uint32_t cBinding)
 ```
 Constructor from parameters. Width and height of texture (in **texels**) are specified by first and second parameter respectively, cFormat is an image format, cSetIndex and cBinding are the set index and binding, with which the texture can be fetched in shader.
@@ -47,11 +42,6 @@ Texture& operator=(const Texture& rTexture)
 Texture& operator=(Texture& rTexture)
 ```
 Copy functions. Each deletes old texture content (if such existed) and creates new texture, similar to rTexture.
-***
-```cpp
-Texture& operator=(Texture&& rTexture)
-```
-Move function. Deletes old texture content (if such existed) and moves rTexture to the current texture.
 ***
 ```cpp
 void resetSetIndex(const uint32_t newIndex)
@@ -386,14 +376,11 @@ VertexAlignmentInfo specifies how the vertex components are aligned. ```binding`
 enum class ImageFormat
 {
   RGBA8,
-  RGB8,
-  BGR8,
   BGRA8,
-  RGB16,
-  RGBA16,
-};
+  RGBA16
+}
 ```
-ImageFormat enumeration class specifes the format of image with following syntax: R, G, B and A letters indicate channel order and availability and number sets the number of bits per channel.
+ImageFormat enumeration class specifes the format of image with following syntax: R, G, B and A letters indicate channel order and availability and number sets the number of bits per channel. 3-letter formats are not supported by most of the graphics processors (even if it says there is support, probably it just adds an additional channel), so you need to transform image to 4-channel by yourself.
 ***
 ```cpp
 enum class CullMode
