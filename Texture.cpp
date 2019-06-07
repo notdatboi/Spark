@@ -91,31 +91,17 @@ namespace spk
     void Texture::create(const uint32_t cWidth, const uint32_t cHeight, ImageFormat cFormat, uint32_t cSetIndex, uint32_t cBinding)
     {
         imageFormat = cFormat;
+        imageInfo.channelCount = 4;
         switch (cFormat)
         {
         case ImageFormat::RGBA8 :
             imageInfo.format = vk::Format::eR8G8B8A8Unorm;
-            imageInfo.channelCount = 4;
-            break;
-        case ImageFormat::RGB8 :
-            imageInfo.format = vk::Format::eR8G8B8Unorm;
-            imageInfo.channelCount = 3;
-            break;
-        case ImageFormat::BGR8 :
-            imageInfo.format = vk::Format::eB8G8R8Unorm;
-            imageInfo.channelCount = 3;
             break;
         case ImageFormat::BGRA8 :
             imageInfo.format = vk::Format::eB8G8R8A8Unorm;
-            imageInfo.channelCount = 4;
-            break;
-        case ImageFormat::RGB16 :
-            imageInfo.format = vk::Format::eR16G16B16Unorm;
-            imageInfo.channelCount = 3;
             break;
         case ImageFormat::RGBA16 :
             imageInfo.format = vk::Format::eR16G16B16A16Unorm;
-            imageInfo.channelCount = 4;
             break;
         default:
             break;

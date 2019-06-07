@@ -12,10 +12,7 @@ namespace spk
     enum class ImageFormat
     {
         RGBA8,
-        RGB8,
-        BGR8,
         BGRA8,
-        RGB16,
         RGBA16,
     };
 

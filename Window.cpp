@@ -18,11 +18,8 @@ namespace spk
 
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         vk::SemaphoreCreateInfo semaphoreInfo;
-        std::cout << "Semaphore1: \n";
         logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &safeToPresentSemaphore);
-        std::cout << "Semaphore2: \n";
         logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &safeToRenderSemaphore);
-        std::cout << "Semaphore3: \n";
         logicalDevice.createSemaphore(&semaphoreInfo, nullptr, &depthMapAvailableSemaphore);
         vk::FenceCreateInfo fenceInfo;
         logicalDevice.createFence(&fenceInfo, nullptr, &safeToRenderFence);
@@ -449,7 +446,7 @@ namespace spk
         logicalDevice.createFence(&fenceInfo, nullptr, &depthMapAvailableFence);
 
         std::optional<vk::Format> format;
-        std::vector<vk::Format> formats = {vk::Format::eD32Sfloat, vk::Format::eD16Unorm, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint, vk::Format::eD16UnormS8Uint};
+        std::vector<vk::Format> formats = {vk::Format::eD32Sfloat, vk::Format::eD16Unorm};
         format = utils::Image::getSupportedFormat(formats, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
         if(!format.has_value()) throw std::runtime_error("Failed to pick format!\n");
         depthMapFormat = format.value();
