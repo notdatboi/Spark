@@ -39,9 +39,8 @@ Creation function. Must be called only once and only if the texture was created 
 ***
 ```cpp
 Texture& operator=(const Texture& rTexture)
-Texture& operator=(Texture& rTexture)
 ```
-Copy functions. Each deletes old texture content (if such existed) and creates new texture, similar to rTexture.
+Copy function. Deletes old texture content (if such existed) and creates new texture, similar to rTexture.
 ***
 ```cpp
 void resetSetIndex(const uint32_t newIndex)
@@ -76,11 +75,6 @@ UniformBuffer(const UniformBuffer& ub)
 Constructor from an existing uniform buffer. Creates uniform buffer, similar to given.
 ***
 ```cpp
-UniformBuffer(UniformBuffer&& ub)
-```
-Constructor from an existing uniform buffer. Moves ub to the current uniform buffer.
-***
-```cpp
 UniformBuffer(const uint32_t cSize, const uint32_t cSetIndex, const uint32_t cBinding)
 ```
 Constructor. Size of the buffer (in **bytes**) is specified by cSize parameter, cSetIndex and cBinding are the set index and binding, with which the buffer can be fetched in shader.
@@ -92,14 +86,8 @@ Creation function. Must be called only once and only if the buffer was created u
 ***
 ```cpp
 UniformBuffer& operator=(const UniformBuffer& rBuffer)
-UniformBuffer& operator=(UniformBuffer& rBuffer)
 ```
-Copy functions. Each deletes old uniform buffer content (if such existed) and creates new uniform buffer, similar to rBuffer.
-***
-```cpp
-UniformBuffer& operator=(UniformBuffer&& rBuffer)
-```
-Move function. Deletes old uniform buffer content (if such existed) and moves rBuffer to the current uniform buffer object.
+Copy function. Deletes old uniform buffer content (if such existed) and creates new uniform buffer, similar to rBuffer.
 ***
 ```cpp
 void resetSetIndex(const uint32_t newIndex)
@@ -210,11 +198,6 @@ VertexBuffer(const VertexBuffer& vb)
 Constructor. Creates vertex buffer from the other vertex buffer.
 ***
 ```cpp
-VertexBuffer(VertexBuffer&& vb)
-```
-Constructor. Moves given buffer to current.
-***
-```cpp
 VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0)
 ```
 Constructor. Creates vertex buffer using given ```VertexAlignmentInfo```s, sizes of an each vertex buffer binding and size of an index buffer (both in **bytes**). For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0.
@@ -241,14 +224,8 @@ Writes given data to the index buffer.
 ***
 ```cpp
 VertexBuffer& operator=(const VertexBuffer& rBuffer)
-VeretxBuffer& operator=(VertexBuffer& rBuffer)
 ```
-Each of these function destroys current VertexBuffer content and creates new VertexBuffer using the data fetched from rBuffer.
-***
-```cpp
-VertexBuffer& operator=(VertexBuffer&& rBuffer)
-```
-Deletes all current VertexBuffer contents and moves rBuffer contents to the current VertexBuffer.
+This function destroys current VertexBuffer content and creates new VertexBuffer using the data fetched from rBuffer.
 ***
 ```cpp
 ~VertexBuffer()
