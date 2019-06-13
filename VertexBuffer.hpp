@@ -4,6 +4,7 @@
 #include"System.hpp"
 #include"MemoryManager.hpp"
 #include"Executives.hpp"
+#include"Buffer.hpp"
 #include<vector>
 
 namespace spk
@@ -51,15 +52,12 @@ namespace spk
     public:
         VertexBuffer();
         VertexBuffer(const VertexBuffer& vb);
-        VertexBuffer(VertexBuffer&& vb);
         VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
         void create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
         void setInstancingOptions(const uint32_t count, const uint32_t first);
         void updateVertexBuffer(const void * data, const uint32_t binding);           // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         void updateIndexBuffer(const void * data);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         VertexBuffer& operator=(const VertexBuffer& rBuffer);
-        VertexBuffer& operator=(VertexBuffer& rBuffer);
-        VertexBuffer& operator=(VertexBuffer&& rBuffer);
         ~VertexBuffer();
     private:
         friend class Window;
@@ -94,7 +92,8 @@ namespace spk
             vk::Fence updatedFence;
             vk::Semaphore updatedSemaphore;
             vk::CommandBuffer updateCommandBuffer;
-            vk::Buffer buffer;
+            //vk::Buffer buffer;
+            utils::Buffer buffer;
         };
 
         void bindMemory();
@@ -103,7 +102,8 @@ namespace spk
         uint32_t indexBufferSize;
         system::AllocatedMemoryData indexMemoryData;
         std::map<uint32_t, VertexBufferInfo> vertexBuffers;
-        vk::Buffer indexBuffer;
+//        vk::Buffer indexBuffer;
+        utils::Buffer indexBuffer;
         vk::Fence indexBufferUpdatedFence;
         vk::Semaphore indexBufferUpdatedSemaphore;
         vk::CommandBuffer indexUpdateCommandBuffer;

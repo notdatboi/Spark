@@ -9,30 +9,9 @@ namespace spk
         create(ub.size, ub.setIndex, ub.binding);
     }
 
-    UniformBuffer::UniformBuffer(UniformBuffer&& ub)
-    {
-        ub.transferred = true;
-        buffer = std::move(ub.buffer);
-        size = std::move(ub.size);
-        memoryData = std::move(ub.memoryData);
-        bufferReadyEvent = std::move(ub.bufferReadyEvent);
-        setIndex = std::move(ub.setIndex);
-        binding = std::move(ub.binding);
-    }
-
     const vk::Buffer& UniformBuffer::getBuffer() const
     {
-        return buffer;
-    }
-
-    vk::Buffer& UniformBuffer::getBuffer()
-    {
-        return buffer;
-    }
-
-    const vk::Event& UniformBuffer::getReadyEvent() const
-    {
-        return bufferReadyEvent;
+        return buffer.getBuffer();
     }
 
     UniformBuffer::UniformBuffer(const size_t cSize, const uint32_t cSetIndex, const uint32_t cBinding)
@@ -44,26 +23,6 @@ namespace spk
     {
         destroy();
         create(rBuffer.size, rBuffer.setIndex, rBuffer.binding);
-        return *this;
-    }
-
-    UniformBuffer& UniformBuffer::operator=(UniformBuffer& rBuffer)
-    {
-        destroy();
-        create(rBuffer.size, rBuffer.setIndex, rBuffer.binding);
-        return *this;
-    }
-
-    UniformBuffer& UniformBuffer::operator=(UniformBuffer&& rBuffer)
-    {
-        destroy();
-        rBuffer.transferred = true;
-        buffer = std::move(rBuffer.buffer);
-        size = std::move(rBuffer.size);
-        memoryData = std::move(rBuffer.memoryData);
-        bufferReadyEvent = std::move(rBuffer.bufferReadyEvent);
-        setIndex = std::move(rBuffer.setIndex);
-        binding = std::move(rBuffer.binding);
         return *this;
     }
 
@@ -96,14 +55,17 @@ namespace spk
     {
         setIndex = cSetIndex;
         binding = cBinding;
+        size = cSize;
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
-        vk::BufferCreateInfo createInfo;
+
+        buffer.create(size, vk::BufferUsageFlagBits::eUniformBuffer, false, false);
+
+/*        vk::BufferCreateInfo createInfo;
         createInfo.setQueueFamilyIndexCount(1);
         uint32_t graphicsFamilyIndex = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
         createInfo.setPQueueFamilyIndices(&graphicsFamilyIndex);
         createInfo.setSharingMode(vk::SharingMode::eExclusive);
         createInfo.setSize(cSize);
-        size = cSize;
         createInfo.setUsage(vk::BufferUsageFlagBits::eUniformBuffer);
 
         if(logicalDevice.createBuffer(&createInfo, nullptr, &buffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create uniform buffer!\n");
@@ -114,54 +76,45 @@ namespace spk
         allocInfo.memoryTypeBits = bufferMemoryRequirements.memoryTypeBits;
         allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;        // TODO: change host coherency
         allocInfo.alignment = bufferMemoryRequirements.alignment;
-        memoryData = system::MemoryManager::getInstance()->allocateMemoryLazy(allocInfo);
-
-        vk::EventCreateInfo eventInfo;
-        if(logicalDevice.createEvent(&eventInfo, nullptr, &bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
-        if(logicalDevice.resetEvent(bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset event!\n");
+        memoryData = system::MemoryManager::getInstance()->allocateMemoryLazy(allocInfo);*/
     }
 
     void UniformBuffer::update(const void* data)
     {
         if(data != nullptr)
         {
-            const vk::DeviceMemory& memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
+/*            const vk::DeviceMemory& memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
             const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
-            if(logicalDevice.resetEvent(bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset event!\n");
             
             void* mappedMemory;
             if(logicalDevice.mapMemory(memory, memoryData.offset, size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
             memcpy(mappedMemory, data, size);
-            logicalDevice.unmapMemory(memory);
-            logicalDevice.setEvent(bufferReadyEvent);
+            logicalDevice.unmapMemory(memory);*/
+            buffer.updateCPUAccessible(data);
         }
     }
 
     void UniformBuffer::bindMemory()
     {
-        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+        buffer.bindMemory();
+/*        const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         const vk::DeviceMemory& memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
-        if(logicalDevice.resetEvent(bufferReadyEvent) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset event!\n");
 
-        if(logicalDevice.bindBufferMemory(buffer, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory to buffer!\n");
-
-        logicalDevice.setEvent(bufferReadyEvent);
+        if(logicalDevice.bindBufferMemory(buffer, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory to buffer!\n");*/
     }
 
     void UniformBuffer::destroy()
     {
-        if(!transferred)                                                                    // If buffer wasn't transferred..
+        buffer.destroy();
+        /*if(buffer.getBuffer())                                // ..and was properly created and wasn't destroyed, destroy it
         {
-            if(buffer.operator VkBuffer() != VK_NULL_HANDLE)                                // ..and was properly created and wasn't destroyed, destroy it
-            {
-                const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
-                logicalDevice.destroyBuffer(buffer, nullptr);
-                buffer = VkBuffer(0);
-                system::MemoryManager::getInstance()->freeMemory(memoryData.index);
-                logicalDevice.destroyEvent(bufferReadyEvent, nullptr);
-                bufferReadyEvent = VkEvent(0);
-            }
-        }
+            const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
+            logicalDevice.destroyBuffer(buffer, nullptr);
+            buffer = VkBuffer(0);
+            system::MemoryManager::getInstance()->freeMemory(memoryData.index);
+            logicalDevice.destroyEvent(bufferReadyEvent, nullptr);
+            bufferReadyEvent = VkEvent(0);
+        }*/
     }
 
     UniformBuffer::~UniformBuffer()

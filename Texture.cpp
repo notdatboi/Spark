@@ -155,7 +155,7 @@ namespace spk
     void Texture::update(const void* rawData)
     {
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
-        vk::Buffer transmissionBuffer;
+/*        vk::Buffer transmissionBuffer;
         system::AllocatedMemoryData bufferData;
         vk::BufferCreateInfo transmissionBufferInfo;
         transmissionBufferInfo.setQueueFamilyIndexCount(1);
@@ -180,18 +180,23 @@ namespace spk
         void * mappedMemory;
         if(logicalDevice.mapMemory(bufferMemory, bufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
         memcpy(mappedMemory, rawData, transmissionBufferInfo.size);
-        logicalDevice.unmapMemory(bufferMemory);
+        logicalDevice.unmapMemory(bufferMemory);*/
+
+        utils::Buffer rawDataBuffer;
+        rawDataBuffer.create(imageInfo.extent.width * imageInfo.extent.height * imageInfo.channelCount, vk::BufferUsageFlagBits::eTransferSrc, false, true);
+        rawDataBuffer.bindMemory();
+        rawDataBuffer.updateCPUAccessible(rawData);
 
         image.changeLayout(layoutChangeCB, vk::ImageLayout::eTransferDstOptimal, contentProcessedSemaphore, safeToCopySemaphore, contentProcessedFence, safeToCopyFence);
-        image.update(imageUpdateCB, transmissionBuffer, safeToCopySemaphore, safeToSampleSemaphore, safeToCopyFence, safeToSampleFence, vk::PipelineStageFlagBits::eFragmentShader, true);
+        image.update(imageUpdateCB, rawDataBuffer.getBuffer()/*transmissionBuffer*/, safeToCopySemaphore, safeToSampleSemaphore, safeToCopyFence, safeToSampleFence, vk::PipelineStageFlagBits::eFragmentShader, true);
         if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
         image.changeLayout(layoutChangeCB, vk::ImageLayout::eShaderReadOnlyOptimal, safeToSampleSemaphore, contentProcessedSemaphore, safeToSampleFence, contentProcessedFence);
         if(imageUpdateCB.reset(vk::CommandBufferResetFlagBits::eReleaseResources) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
         if(logicalDevice.waitForFences(1, &contentProcessedFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
         if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
 
-        logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
-        system::MemoryManager::getInstance()->freeMemory(bufferData.index);
+        //logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
+        //system::MemoryManager::getInstance()->freeMemory(bufferData.index);
     }
 
     void Texture::destroy()

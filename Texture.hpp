@@ -6,6 +6,7 @@
 #include"Executives.hpp"
 #include"Image.hpp"
 #include"ImageView.hpp"
+#include"Buffer.hpp"
 
 namespace spk
 {

@@ -73,6 +73,8 @@ namespace spk
 
         Image::Image(const vk::Extent3D cExtent, const vk::Format cFormat, const vk::ImageUsageFlags cUsage, const vk::ImageAspectFlags cAspectFlags)
         {
+            memoryData.index = ~0;
+            memoryData.offset = ~0;
             create(cExtent, cFormat, cUsage, cAspectFlags);
         }
 
@@ -355,6 +357,8 @@ namespace spk
             if(memoryData.index != (~0) && memoryData.offset != (~0))
             {
                 system::MemoryManager::getInstance()->freeMemory(memoryData.index);
+                memoryData.index = ~0;
+                memoryData.offset = ~0;
             }
         }
 
