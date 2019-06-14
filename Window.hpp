@@ -31,7 +31,7 @@ namespace spk
         void create(const uint32_t cWidth, const uint32_t cHeight, const std::string cTitle, const DrawOptions cOptions);
         Window(const uint32_t cWidth, const uint32_t cHeight, const std::string cTitle, const DrawOptions cOptions);
         void destroy();
-        void draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders);
+        void draw(const ResourceSet* resources, const VertexAlignmentInfo* alignmentInfo, const std::vector<VertexBuffer*>& vertexBuffers, const ShaderSet* shaders);
         ~Window();
         GLFWwindow* getGLFWWindow();
     private:
@@ -39,7 +39,7 @@ namespace spk
         {
             vk::Pipeline pipeline;
             const ResourceSet* resources;
-            const VertexBuffer* vertices;
+            const VertexAlignmentInfo* alignmentInfo;
             const ShaderSet* shaders;
         };
         GLFWwindow* window;
@@ -72,10 +72,10 @@ namespace spk
         void createDepthMap();
         void createRenderPass();
         void createFramebuffers();
-        std::pair<vk::VertexInputBindingDescription, std::vector<vk::VertexInputAttributeDescription> > createPipelineVertexInputStateBase(const VertexAlignmentInfo& vertexAlignmentInfo);
-        void createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const std::vector<VertexAlignmentInfo>& vertexAlignmentInfos, const vk::PipelineLayout& layout);
+        std::pair<vk::VertexInputBindingDescription, std::vector<vk::VertexInputAttributeDescription> > createPipelineVertexInputStateBase(const BindingAlignmentInfo& vertexAlignmentInfo);
+        void createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const std::vector<BindingAlignmentInfo>& vertexAlignmentInfos, const vk::PipelineLayout& layout);
         void createCommandBuffers();
-        void initCommandBuffers(DrawComponents& drawComponents);
+        void initCommandBuffers(DrawComponents& drawComponents, const std::vector<VertexBuffer*>& vertexBuffers);
     };
 
 }

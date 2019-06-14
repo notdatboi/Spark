@@ -181,6 +181,32 @@ Copy function. Deletes old contents of a current shader set and inits it with pa
 ```
 Destructor.
 ***
+#### Vertex Alignment Info Class
+```cpp
+spk::VertexAlignmentInfo
+```
+**Public member functions**
+***
+```cpp
+VertexAlignmentInfo()
+```
+Default constructor. Does not init anything.
+***
+```cpp
+VertexAlignmentInfo(const std::vector<BindingAlignmentInfo>& cBindingAlignmentInfos)
+```
+Constructs object using data of binding alignments.
+***
+```cpp
+void create(const std::vector<BindingAlignmentInfo>& cBindingAlignmentInfos)
+```
+Creates object using data of binding alignments.
+***
+```cpp
+VertexAlignmentInfo& operator=(const VertexAlignmentInfo& rInfo);
+```
+Copies binding alignment data of right object to the current object.
+***
 #### Vertex Buffer Class
 ```cpp
 spk::VertexBuffer
@@ -198,14 +224,14 @@ VertexBuffer(const VertexBuffer& vb)
 Constructor. Creates vertex buffer from the other vertex buffer.
 ***
 ```cpp
-VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0)
+VertexBuffer(const std::vector<uint32_t>& cVertexBufferBindings, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0)
 ```
-Constructor. Creates vertex buffer using given ```VertexAlignmentInfo```s, sizes of an each vertex buffer binding and size of an index buffer (both in **bytes**). For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0.
+Constructor. Creates vertex buffer using given binding indices, sizes of an each vertex buffer binding and size of an index buffer (both in **bytes**). For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0.
 ***
 ```cpp
-void create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0)
+void create(const std::vector<uint32_t>& cVertexBufferBindings, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0)
 ```
-Creates vertex buffer using given ```VertexAlignmentInfo```s, sizes of an each vertex buffer binding and size of an index buffer. For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0. Must be called only once and only if the object was created using default constructor.
+Creates vertex buffer using given binding indices, sizes of an each vertex buffer binding and size of an index buffer. For non-indexed draws do not specify cIndexBufferSize parameter or set it to 0. Must be called only once and only if the object was created using default constructor.
 ***
 ```cpp
 void setInstancingOptions(const uint32_t count, const uint32_t first)
@@ -254,9 +280,9 @@ void create(const uint32_t cWidth, const uint32_t cHeight, const std::string cTi
 Creates window from given parameters: width, height, title and draw options of the window. Must be called only once and only if the object was created using default constructor.
 ***
 ```cpp
-void draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders)
+void draw(const ResourceSet* resources, const VertexAlignmentInfo* alignmentInfo, const std::vector<VertexBuffer*>& vertexBuffers, const ShaderSet* shaders)
 ```
-Draws picture and presents it using given pointers: pointer to resource set for use in shaders, pointer to vertex buffer and pointer to shader set to load shaders.
+To draw picture, you need to specify, which resources you are going to use, how to align each vertex in memory (and how vertices will be read), vertex buffers = meshes you want to draw, and shaders you want to use to process vertex input.
 ***
 ```cpp
 GLFWwindow* getGLFWWindow()
@@ -340,14 +366,14 @@ struct StructFieldInfo
 StructFieldInfo specifies one field of structure you are going to use as vertex in vertex shader. ```location``` is a shader layout attribute, ```format``` is a format of a field and ```offset``` is a field offset (in **bytes**) from the befinning of the structure (usually obtained with a standard function offsetof()).
 ***
 ```cpp
-struct VertexAlignmentInfo
+struct BindingAlignmentInfo
 {
   uint32_t binding;
   uint32_t structSize;
   std::vector<StructFieldInfo> fields;
 }
 ```
-VertexAlignmentInfo specifies how the vertex components are aligned. ```binding``` is a shader layout attribute, ```structSize``` is a size of one vertex (in **bytes**) and ```fields``` vector describes every field of vertex class or structure.
+BindingAlignmentInfo specifies how the vertex components are aligned inside the binding. ```binding``` is a shader layout attribute, ```structSize``` is a size of one vertex (in **bytes**) and ```fields``` vector describes every field of vertex class or structure.
 ***
 ```cpp
 enum class ImageFormat

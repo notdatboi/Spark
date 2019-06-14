@@ -51,15 +51,15 @@ namespace spk
         return window;
     }
 
-    void Window::draw(const ResourceSet* resources, const VertexBuffer* vertexBuffer, const ShaderSet* shaders)
+    void Window::draw(const ResourceSet* resources, const VertexAlignmentInfo* alignmentInfo, const std::vector<VertexBuffer*>& vertexBuffers, const ShaderSet* shaders)
     {
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
         const vk::Queue& graphicsQueue = system::Executives::getInstance()->getGraphicsQueue();
-        std::tuple<uint32_t, uint32_t, uint32_t> key = {resources->getIdentifier(), vertexBuffer->getIdentifier(), shaders->getIdentifier()};
+        std::tuple<uint32_t, uint32_t, uint32_t> key = {resources->getIdentifier(), alignmentInfo->getIdentifier(), shaders->getIdentifier()};
         if(drawComponents.count(key) == 0)
         {
-            drawComponents[key] = {vk::Pipeline(), resources, vertexBuffer, shaders};
-            createPipeline(drawComponents[key].pipeline, shaders->getShaderStages(), vertexBuffer->getAlignmentInfos(), resources->getPipelineLayout());
+            drawComponents[key] = {vk::Pipeline(), resources, alignmentInfo, shaders};
+            createPipeline(drawComponents[key].pipeline, shaders->getShaderStages(), alignmentInfo->getAlignmentInfos(), resources->getPipelineLayout());
         }
         if(currentPipeline != key)
         {
@@ -72,7 +72,7 @@ namespace spk
                     cb.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
                 }
             }
-            initCommandBuffers(drawComponents[key]);
+            initCommandBuffers(drawComponents[key], vertexBuffers);
         }
         uint32_t imageIndex;
         if(logicalDevice.acquireNextImageKHR(swapchain, ~0U, safeToRenderSemaphore, safeToRenderFence, &imageIndex) != vk::Result::eSuccess) throw std::runtime_error("Failed to acquire image!\n");
@@ -112,7 +112,7 @@ namespace spk
         logicalDevice.resetFences(1, &safeToPresentFence);
     }
 
-    void Window::initCommandBuffers(DrawComponents& drawComponents)
+    void Window::initCommandBuffers(DrawComponents& drawComponents, const std::vector<VertexBuffer*>& vertexBuffers)
     {
         const vk::CommandPool& commandPool = system::Executives::getInstance()->getPool();
         int i = 0;
@@ -139,33 +139,36 @@ namespace spk
             renderPassInfo.setClearValueCount(2);
             renderPassInfo.setPClearValues(clearValues);
             commandBuffer.beginRenderPass(&renderPassInfo, vk::SubpassContents());
-
-            vk::DeviceSize offset = 0;
-            const std::vector<VertexAlignmentInfo>& alignmentInfos = drawComponents.vertices->getAlignmentInfos();
-            const uint32_t ibSize = drawComponents.vertices->getIndexBufferSize();
-            for(const auto& alignment : alignmentInfos)
-            {
-                const vk::Buffer& vb = drawComponents.vertices->getVertexBuffer(alignment.binding);
-                const uint32_t vbSize = drawComponents.vertices->getVertexBufferSize(alignment.binding);
-                commandBuffer.bindVertexBuffers(alignment.binding, 1, &vb, &offset);
-            }
-            if(ibSize != 0)
-            {
-                const vk::Buffer& ib = drawComponents.vertices->getIndexBuffer();
-                commandBuffer.bindIndexBuffer(ib, offset, vk::IndexType::eUint32);
-            }
             commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, drawComponents.resources->getPipelineLayout(), 0, drawComponents.resources->getDescriptorSets().size(), drawComponents.resources->getDescriptorSets().data(), 0, nullptr);
 
-            const uint32_t instanceCount = drawComponents.vertices->getInstanceCount(), firstInstance = drawComponents.vertices->getFirstInstance();
+            vk::DeviceSize offset = 0;
+            const std::vector<BindingAlignmentInfo>& alignmentInfos = drawComponents.alignmentInfo->getAlignmentInfos();
+            for(const auto* vertexBuffer : vertexBuffers)
+            {
+                const uint32_t ibSize = vertexBuffer->getIndexBufferSize();
+                for(const auto& alignment : alignmentInfos)
+                {
+                    const vk::Buffer& vb = vertexBuffer->getVertexBuffer(alignment.binding);
+                    const uint32_t vbSize = vertexBuffer->getVertexBufferSize(alignment.binding);
+                    commandBuffer.bindVertexBuffers(alignment.binding, 1, &vb, &offset);
+                }
+                if(ibSize != 0)
+                {
+                    const vk::Buffer& ib = vertexBuffer->getIndexBuffer();
+                    commandBuffer.bindIndexBuffer(ib, offset, vk::IndexType::eUint32);
+                }
 
-            if(ibSize != 0)
-            {
-                commandBuffer.drawIndexed(ibSize / sizeof(uint32_t), instanceCount, 0, 0, firstInstance);
-            }
-            else
-            {
-                uint32_t vertexCount = drawComponents.vertices->getVertexBufferSize(alignmentInfos[0].binding) / alignmentInfos[0].structSize;
-                commandBuffer.draw(vertexCount, instanceCount, 0, firstInstance);
+                const uint32_t instanceCount = vertexBuffer->getInstanceCount(), firstInstance = vertexBuffer->getFirstInstance();
+
+                if(ibSize != 0)
+                {
+                    commandBuffer.drawIndexed(ibSize / sizeof(uint32_t), instanceCount, 0, 0, firstInstance);
+                }
+                else
+                {
+                    uint32_t vertexCount = vertexBuffer->getVertexBufferSize(alignmentInfos[0].binding) / alignmentInfos[0].structSize;
+                    commandBuffer.draw(vertexCount, instanceCount, 0, firstInstance);
+                }
             }
 
             commandBuffer.endRenderPass();
@@ -174,7 +177,7 @@ namespace spk
         }
     }
 
-    std::pair<vk::VertexInputBindingDescription, std::vector<vk::VertexInputAttributeDescription> > Window::createPipelineVertexInputStateBase(const VertexAlignmentInfo& vertexAlignmentInfo)
+    std::pair<vk::VertexInputBindingDescription, std::vector<vk::VertexInputAttributeDescription> > Window::createPipelineVertexInputStateBase(const BindingAlignmentInfo& vertexAlignmentInfo)
     {
         vk::VertexInputBindingDescription bindingDesc;
         bindingDesc.setBinding(vertexAlignmentInfo.binding);
@@ -242,7 +245,7 @@ namespace spk
         return {bindingDesc, attributeDescriptions};
     }
 
-    void Window::createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const std::vector<VertexAlignmentInfo>& vertexAlignmentInfos, const vk::PipelineLayout& layout)
+    void Window::createPipeline(vk::Pipeline& pipeline, const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStageInfos, const std::vector<BindingAlignmentInfo>& vertexAlignmentInfos, const vk::PipelineLayout& layout)
     {
         const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
 

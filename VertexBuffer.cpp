@@ -2,40 +2,63 @@
 
 namespace spk
 {
-    uint32_t VertexBuffer::count = 0;
-
-    VertexBuffer::VertexBuffer(): identifier(count) {++count;}
-
-    VertexBuffer::VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize): 
-        alignmentInfos(cAlignmentInfos), 
-        vertexBufferSizes(cVertexBufferSizes),
-        indexBufferSize(cIndexBufferSize),
-        identifier(count)
+    VertexAlignmentInfo::VertexAlignmentInfo(const std::vector<BindingAlignmentInfo>& cBindingAlignmentInfos)
     {
-        init();
-        ++count;
+        create(cBindingAlignmentInfos);
     }
 
-    VertexBuffer::VertexBuffer(const VertexBuffer& vb): identifier(count)
-    {
-        ++count;
-        create(vb.alignmentInfos, vb.vertexBufferSizes, vb.indexBufferSize);
-    }
-
-    void VertexBuffer::create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize)
+    void VertexAlignmentInfo::create(const std::vector<BindingAlignmentInfo>& cBindingAlignmentInfos)
     {
         identifier = count;
         ++count;
-        alignmentInfos = cAlignmentInfos;
+        bindingAlignmentInfos = cBindingAlignmentInfos;
+    }
+
+    const std::vector<BindingAlignmentInfo>& VertexAlignmentInfo::getAlignmentInfos() const
+    {
+        return bindingAlignmentInfos;
+    }
+
+    const uint32_t VertexAlignmentInfo::getIdentifier() const
+    {
+        return identifier;
+    }
+
+    VertexAlignmentInfo& VertexAlignmentInfo::operator=(const VertexAlignmentInfo& rInfo)
+    {
+        bindingAlignmentInfos = rInfo.bindingAlignmentInfos;
+        identifier = rInfo.identifier;
+        return *this;
+    }
+
+    uint32_t VertexAlignmentInfo::count = 0;
+
+
+
+    VertexBuffer::VertexBuffer(){}
+
+    VertexBuffer::VertexBuffer(const std::vector<uint32_t>& cVertexBufferBindings, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize): 
+        //alignmentInfos(cAlignmentInfos), 
+        vertexBufferBindings(cVertexBufferBindings),
+        vertexBufferSizes(cVertexBufferSizes),
+        indexBufferSize(cIndexBufferSize)
+    {
+        init();
+    }
+
+    VertexBuffer::VertexBuffer(const VertexBuffer& vb)
+    {
+        create(vb.vertexBufferBindings, vb.vertexBufferSizes, vb.indexBufferSize);
+    }
+
+    void VertexBuffer::create(const std::vector<uint32_t>& cVertexBufferBindings, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize)
+    {
+        vertexBufferBindings = cVertexBufferBindings;
         vertexBufferSizes = cVertexBufferSizes;
         indexBufferSize = cIndexBufferSize;
         init();
     }
 
-    const uint32_t VertexBuffer::getIdentifier() const
-    {
-        return identifier;
-    }
 
     const vk::Buffer& VertexBuffer::getVertexBuffer(const uint32_t binding) const
     {
@@ -77,11 +100,6 @@ namespace spk
         return &(vertexBuffers.at(binding).updatedSemaphore);
     }
 
-    const std::vector<VertexAlignmentInfo>& VertexBuffer::getAlignmentInfos() const
-    {
-        return alignmentInfos;
-    }
-
     void VertexBuffer::setInstancingOptions(const uint32_t count, const uint32_t first)
     {
         instanceCount = count;
@@ -101,9 +119,7 @@ namespace spk
     VertexBuffer& VertexBuffer::operator=(const VertexBuffer& rBuffer)
     {
         destroy();
-        create(rBuffer.alignmentInfos, rBuffer.vertexBufferSizes, rBuffer.indexBufferSize);
-        identifier = count;
-        ++count;
+        create(rBuffer.vertexBufferBindings, rBuffer.vertexBufferSizes, rBuffer.indexBufferSize);
         return *this;
     }
 
@@ -121,9 +137,9 @@ namespace spk
         commandInfo.setCommandPool(commandPool);
         commandInfo.setLevel(vk::CommandBufferLevel::ePrimary);
 
-        for(int i = 0; i < alignmentInfos.size(); ++i)
+        for(int i = 0; i < vertexBufferBindings.size(); ++i)
         {
-            vertexBuffers[alignmentInfos[i].binding].size = vertexBufferSizes[i];
+            vertexBuffers[vertexBufferBindings[i]].size = vertexBufferSizes[i];
         }
 
         for(auto& vb : vertexBuffers)

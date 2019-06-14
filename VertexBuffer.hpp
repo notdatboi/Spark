@@ -40,11 +40,28 @@ namespace spk
         uint32_t offset;
     };
 
-    struct VertexAlignmentInfo
+    struct BindingAlignmentInfo
     {
         uint32_t binding;
         uint32_t structSize;
         std::vector<StructFieldInfo> fields;
+    };
+
+    class VertexAlignmentInfo
+    {
+    public:
+        VertexAlignmentInfo(){}
+        VertexAlignmentInfo(const std::vector<BindingAlignmentInfo>& cBindingAlignmentInfos);
+        void create(const std::vector<BindingAlignmentInfo>& cBindingAlignmentInfos);
+        VertexAlignmentInfo& operator=(const VertexAlignmentInfo& rInfo);
+    private:
+        friend class Window;
+        const std::vector<BindingAlignmentInfo>& getAlignmentInfos() const;
+        const uint32_t getIdentifier() const;
+        static uint32_t count;
+        uint32_t identifier;
+        
+        std::vector<BindingAlignmentInfo> bindingAlignmentInfos;
     };
 
     class VertexBuffer
@@ -52,8 +69,8 @@ namespace spk
     public:
         VertexBuffer();
         VertexBuffer(const VertexBuffer& vb);
-        VertexBuffer(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
-        void create(const std::vector<VertexAlignmentInfo>& cAlignmentInfos, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
+        VertexBuffer(const std::vector<uint32_t>& cVertexBufferBindings, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
+        void create(const std::vector<uint32_t>& cVertexBufferBindings, const std::vector<uint32_t>& cVertexBufferSizes, const uint32_t cIndexBufferSize = 0);
         void setInstancingOptions(const uint32_t count, const uint32_t first);
         void updateVertexBuffer(const void * data, const uint32_t binding);           // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
         void updateIndexBuffer(const void * data);            // TODO: make a staging transmission buffer a class field, make command buffer not one-time-submit buffer
@@ -61,10 +78,8 @@ namespace spk
         ~VertexBuffer();
     private:
         friend class Window;
-        const uint32_t getIdentifier() const;
         const vk::Buffer& getVertexBuffer(const uint32_t binding) const;
         const vk::Buffer& getIndexBuffer() const;
-        const std::vector<VertexAlignmentInfo>& getAlignmentInfos() const;
         const uint32_t getVertexBufferSize(const uint32_t binding) const;
         const uint32_t getIndexBufferSize() const;
         const vk::Fence* getIndexBufferFence() const;
@@ -97,7 +112,8 @@ namespace spk
         };
 
         void bindMemory();
-        std::vector<VertexAlignmentInfo> alignmentInfos;
+        //std::vector<VertexAlignmentInfo> alignmentInfos;
+        std::vector<uint32_t> vertexBufferBindings;
         std::vector<uint32_t> vertexBufferSizes;
         uint32_t indexBufferSize;
         system::AllocatedMemoryData indexMemoryData;
@@ -107,8 +123,6 @@ namespace spk
         vk::Fence indexBufferUpdatedFence;
         vk::Semaphore indexBufferUpdatedSemaphore;
         vk::CommandBuffer indexUpdateCommandBuffer;
-        static uint32_t count;
-        uint32_t identifier;
         uint32_t instanceCount;
         uint32_t firstInstance;
         bool transferred = false;

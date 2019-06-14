@@ -161,17 +161,17 @@ namespace spk
 
         void Buffer::destroy()
         {
-            if(memoryData.index != (~0) && memoryData.offset != (~0))
-            {
-                system::MemoryManager::getInstance()->freeMemory(memoryData.index);
-                memoryData.index = ~0;
-                memoryData.offset = ~0;
-            }
             if(buffer)
             {
                 const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
                 logicalDevice.destroyBuffer(buffer, nullptr);
                 buffer = vk::Buffer();
+            }
+            if(memoryData.index != (~0) && memoryData.offset != (~0))
+            {
+                system::MemoryManager::getInstance()->freeMemory(memoryData.index);
+                memoryData.index = ~0;
+                memoryData.offset = ~0;
             }
         }
 
