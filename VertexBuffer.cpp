@@ -123,28 +123,11 @@ namespace spk
 
         for(int i = 0; i < alignmentInfos.size(); ++i)
         {
-            //vertexBuffers[alignmentInfos[i].binding] = VertexBufferInfo();
             vertexBuffers[alignmentInfos[i].binding].size = vertexBufferSizes[i];
         }
 
         for(auto& vb : vertexBuffers)
         {
-/*            vk::BufferCreateInfo vBufferInfo;
-            vBufferInfo.setSize(vb.second.size);
-            vBufferInfo.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
-            vBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
-            vBufferInfo.setQueueFamilyIndexCount(1);
-            vBufferInfo.setPQueueFamilyIndices(&queueFamIndex);
-            if(logicalDevice.createBuffer(&vBufferInfo, nullptr, &vb.second.buffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create buffer!\n");
-
-            vk::MemoryRequirements vBufferMemoryReq;
-            logicalDevice.getBufferMemoryRequirements(vb.second.buffer, &vBufferMemoryReq);
-            system::MemoryAllocationInfo vAllocInfo;
-            vAllocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
-            vAllocInfo.size = vBufferMemoryReq.size;
-            vAllocInfo.memoryTypeBits = vBufferMemoryReq.memoryTypeBits;
-            vAllocInfo.alignment = vBufferMemoryReq.alignment;
-            vb.second.memoryData = system::MemoryManager::getInstance()->allocateMemoryLazy(vAllocInfo);*/
             vb.second.buffer.create(vb.second.size, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst, true, false);
 
             if(logicalDevice.createFence(&fenceInfo, nullptr, &vb.second.updatedFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
@@ -155,22 +138,6 @@ namespace spk
 
         if(indexBufferSize != 0)
         {
-            /*vk::BufferCreateInfo iBufferInfo;
-            iBufferInfo.setSize(indexBufferSize);
-            iBufferInfo.setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst);
-            iBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
-            iBufferInfo.setQueueFamilyIndexCount(1);
-            iBufferInfo.setPQueueFamilyIndices(&queueFamIndex);
-            if(logicalDevice.createBuffer(&iBufferInfo, nullptr, &indexBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create buffer!\n");
-
-            vk::MemoryRequirements iBufferMemoryReq;
-            logicalDevice.getBufferMemoryRequirements(indexBuffer, &iBufferMemoryReq);
-            system::MemoryAllocationInfo iAllocInfo;
-            iAllocInfo.flags = vk::MemoryPropertyFlagBits::eDeviceLocal;
-            iAllocInfo.size = iBufferMemoryReq.size;
-            iAllocInfo.alignment = iBufferMemoryReq.alignment;
-            iAllocInfo.memoryTypeBits = iBufferMemoryReq.memoryTypeBits;
-            indexMemoryData = system::MemoryManager::getInstance()->allocateMemoryLazy(iAllocInfo);*/
             indexBuffer.create(indexBufferSize, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst, true, false);
 
             if(logicalDevice.createFence(&fenceInfo, nullptr, &indexBufferUpdatedFence) != vk::Result::eSuccess) throw std::runtime_error("Failed to create fence!\n");
@@ -199,31 +166,6 @@ namespace spk
 
         bindMemory();
 
-/*        vk::Buffer transmissionBuffer;
-        vk::BufferCreateInfo transmissionBufferInfo;
-        transmissionBufferInfo.setQueueFamilyIndexCount(1);
-        uint32_t index = system::Executives::getInstance()->getGraphicsQueueFamilyIndex();
-        transmissionBufferInfo.setPQueueFamilyIndices(&index);
-        transmissionBufferInfo.setSharingMode(vk::SharingMode::eExclusive);
-        transmissionBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
-        transmissionBufferInfo.setSize(vertex ? vertexBuffers[binding].size : indexBufferSize);
-        if(logicalDevice.createBuffer(&transmissionBufferInfo, nullptr, &transmissionBuffer) != vk::Result::eSuccess) throw std::runtime_error("Failed to create staging buffer!\n");
-
-        vk::MemoryRequirements transmissionBufferMemoryRequirements;
-        logicalDevice.getBufferMemoryRequirements(transmissionBuffer, &transmissionBufferMemoryRequirements);
-        system::MemoryAllocationInfo allocInfo;
-        allocInfo.flags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;         // TODO: also make memory property non-coherent
-        allocInfo.memoryTypeBits = transmissionBufferMemoryRequirements.memoryTypeBits;
-        allocInfo.size = transmissionBufferMemoryRequirements.size;
-        allocInfo.alignment = transmissionBufferMemoryRequirements.alignment;
-        system::AllocatedMemoryData transmissionBufferData = system::MemoryManager::getInstance()->allocateMemory(allocInfo);
-        const vk::DeviceMemory& transmissionBufferMemory = system::MemoryManager::getInstance()->getMemory(transmissionBufferData.index);
-
-        if(logicalDevice.bindBufferMemory(transmissionBuffer, transmissionBufferMemory, transmissionBufferData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
-        void * mappedMemory;
-        if(logicalDevice.mapMemory(transmissionBufferMemory, transmissionBufferData.offset, transmissionBufferInfo.size, vk::MemoryMapFlags(), &mappedMemory) != vk::Result::eSuccess) throw std::runtime_error("Failed to map memory!\n");
-        memcpy(mappedMemory, data, vertex ? vertexBuffers[binding].size : indexBufferSize);
-        logicalDevice.unmapMemory(transmissionBufferMemory);*/
         utils::Buffer transmissionBuffer;
         transmissionBuffer.create(vertex ? vertexBuffers[binding].size : indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc, false, true);
         transmissionBuffer.bindMemory();
@@ -254,35 +196,8 @@ namespace spk
                 true);
         }
 
-/*        vk::CommandBufferBeginInfo commandBufferInfo;
-        //commandBufferInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-        if(updateCommandBuffer.begin(&commandBufferInfo) != vk::Result::eSuccess) throw std::runtime_error("Failed to begin command buffer!\n");
-
-        vk::BufferCopy transmissionCopyData;
-        transmissionCopyData.setSrcOffset(0);
-        transmissionCopyData.setDstOffset(0);
-        transmissionCopyData.setSize(vertex ? vertexBuffers[binding].size : indexBufferSize);
-        updateCommandBuffer.copyBuffer(transmissionBuffer, vertex ? vertexBuffers[binding].buffer : indexBuffer, 1, &transmissionCopyData);
-
-        updateCommandBuffer.end();
-
-        vk::SubmitInfo submitInfo;
-        submitInfo.setCommandBufferCount(1);
-        submitInfo.setPCommandBuffers(&updateCommandBuffer);
-        submitInfo.setSignalSemaphoreCount(1);                 
-        submitInfo.setPSignalSemaphores(vertex ? &vertexBuffers[binding].updatedSemaphore : &indexBufferUpdatedSemaphore);
-        submitInfo.setWaitSemaphoreCount(0);                   
-        submitInfo.setPWaitSemaphores(nullptr);                 
-        vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eVertexInput;
-        submitInfo.setPWaitDstStageMask(&dstStageFlags);
-
-        graphicsQueue.submit(1, &submitInfo, vertex ? vertexBuffers[binding].updatedFence : indexBufferUpdatedFence);*/
-
         logicalDevice.waitForFences(1, vertex ? &vertexBuffers[binding].updatedFence : &indexBufferUpdatedFence, true, ~0U);              //  move the sync operations out of here
         if(updateCommandBuffer.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
-        /*logicalDevice.destroyBuffer(transmissionBuffer, nullptr);
-        system::MemoryManager::getInstance()->freeMemory(transmissionBufferData.index);*/
     }
 
     void VertexBuffer::bindMemory()
