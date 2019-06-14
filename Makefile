@@ -27,6 +27,7 @@ obj/ResourceSet.o: ResourceSet.cpp \
 	UniformBuffer.hpp \
 	SparkIncludeBase.hpp \
 	Image.hpp \
+	Buffer.hpp \
 	ImageView.hpp
 	$(CC) -c $< -o $@ -g
 
@@ -43,6 +44,7 @@ obj/Texture.o: Texture.cpp \
 	Executives.hpp \
 	SparkIncludeBase.hpp \
 	Image.hpp \
+	Buffer.hpp \
 	ImageView.hpp
 	$(CC) -c $< -o $@ -g
 
@@ -51,6 +53,7 @@ obj/UniformBuffer.o: UniformBuffer.cpp \
 	System.hpp \
 	MemoryManager.hpp \
 	Executives.hpp \
+	Buffer.hpp \
 	SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 	
@@ -59,6 +62,7 @@ obj/VertexBuffer.o: VertexBuffer.cpp \
 	Executives.hpp \
 	System.hpp \
 	MemoryManager.hpp \
+	Buffer.hpp \
 	SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 
@@ -67,6 +71,7 @@ obj/Window.o: Window.cpp \
 	System.hpp \
 	ResourceSet.hpp  \
 	ShaderSet.hpp \
+	Buffer.hpp \
 	SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 
