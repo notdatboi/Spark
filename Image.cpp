@@ -146,7 +146,7 @@ namespace spk
         {
             const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
             const vk::DeviceMemory memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
-            if(logicalDevice.bindImageMemory(image, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind image memory!\n");
+            logicalDevice.bindImageMemory(image, memory, memoryData.offset);
         }
 
         void Image::changeLayout(vk::CommandBuffer& layoutChangeBuffer, 

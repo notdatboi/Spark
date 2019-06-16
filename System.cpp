@@ -107,7 +107,7 @@ namespace spk
         {
             if(enableValidation)
             {
-                const char * preferredValidationLayer = "VK_LAYER_LUNARG_standard_validation";
+                const char * preferredValidationLayer = "VK_LAYER_KHRONOS_validation";
                 uint32_t layerCount;
                 vk::enumerateInstanceLayerProperties(&layerCount, nullptr);
                 std::vector<vk::LayerProperties> layerData(layerCount);
@@ -229,12 +229,10 @@ namespace spk
             #ifdef DEBUG
             if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
             {
-                std::cout << "Error\n";
                 yeet(pCallbackData->pMessage);
             }
             if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
             {
-                std::cout << "Warning\n";
                 yeet(pCallbackData->pMessage);
             }
             std::cout << "DEBUG INFO: " << pCallbackData->pMessage << '\n';

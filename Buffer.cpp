@@ -78,7 +78,7 @@ namespace spk
         {
             const vk::Device& logicalDevice = system::System::getInstance()->getLogicalDevice();
             const vk::DeviceMemory& memory = system::MemoryManager::getInstance()->getMemory(memoryData.index);
-            if(logicalDevice.bindBufferMemory(buffer, memory, memoryData.offset) != vk::Result::eSuccess) throw std::runtime_error("Failed to bind memory!\n");
+            logicalDevice.bindBufferMemory(buffer, memory, memoryData.offset);
         }
 
         void Buffer::updateCPUAccessible(const void* data)

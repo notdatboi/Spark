@@ -213,7 +213,7 @@ namespace spk
         }
 
         logicalDevice.waitForFences(1, vertex ? &vertexBuffers[binding].updatedFence : &indexBufferUpdatedFence, true, ~0U);              //  move the sync operations out of here
-        if(updateCommandBuffer.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset buffer!\n");
+        updateCommandBuffer.reset(vk::CommandBufferResetFlags());
     }
 
     void VertexBuffer::bindMemory()

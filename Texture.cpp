@@ -147,7 +147,7 @@ namespace spk
         image.bindMemory();
         image.changeLayout(layoutChangeCB, vk::ImageLayout::eShaderReadOnlyOptimal, vk::Semaphore(), contentProcessedSemaphore, vk::Fence(), contentProcessedFence);
         if(logicalDevice.waitForFences(1, &contentProcessedFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
-        if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
+        layoutChangeCB.reset(vk::CommandBufferResetFlags());
 
         imageView.create(image.getImage(), image.getFormat(), image.getSubresource());
     }
@@ -163,11 +163,11 @@ namespace spk
 
         image.changeLayout(layoutChangeCB, vk::ImageLayout::eTransferDstOptimal, contentProcessedSemaphore, safeToCopySemaphore, contentProcessedFence, safeToCopyFence);
         image.update(imageUpdateCB, rawDataBuffer.getBuffer(), safeToCopySemaphore, safeToSampleSemaphore, safeToCopyFence, safeToSampleFence, vk::PipelineStageFlagBits::eFragmentShader, true);
-        if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
+        layoutChangeCB.reset(vk::CommandBufferResetFlags());
         image.changeLayout(layoutChangeCB, vk::ImageLayout::eShaderReadOnlyOptimal, safeToSampleSemaphore, contentProcessedSemaphore, safeToSampleFence, contentProcessedFence);
-        if(imageUpdateCB.reset(vk::CommandBufferResetFlagBits::eReleaseResources) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
+        imageUpdateCB.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
         if(logicalDevice.waitForFences(1, &contentProcessedFence, true, ~0U) != vk::Result::eSuccess) throw std::runtime_error("Failed to wait for fences!\n");
-        if(layoutChangeCB.reset(vk::CommandBufferResetFlags()) != vk::Result::eSuccess) throw std::runtime_error("Failed to reset command buffer!\n");
+        layoutChangeCB.reset(vk::CommandBufferResetFlags());
     }
 
     void Texture::destroy()
