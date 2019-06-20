@@ -1,104 +1,104 @@
 LIBS= -lvulkan -lglfw -lassimp
 CC=g++ -std=c++17
 BIN=a.out
-SOURCES=$(wildcard *.cpp)
-OBJS=$(patsubst %.cpp,obj/%.o,$(SOURCES))
+SOURCES=$(wildcard src/*.cpp)
+OBJS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 
 all: $(OBJS)
 
-obj/Executives.o: Executives.cpp \
-	Executives.hpp \
-	SparkIncludeBase.hpp \
-	System.hpp
+obj/Executives.o: src/Executives.cpp \
+	include/Executives.hpp \
+	include/SparkIncludeBase.hpp \
+	include/System.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/MemoryManager.o: MemoryManager.cpp \
-	MemoryManager.hpp \
-	SparkIncludeBase.hpp \
-	System.hpp 
+obj/MemoryManager.o: src/MemoryManager.cpp \
+	include/MemoryManager.hpp \
+	include/SparkIncludeBase.hpp \
+	include/System.hpp 
 	$(CC) -c $< -o $@ -g
 
-obj/ResourceSet.o: ResourceSet.cpp \
-	ResourceSet.hpp \
-	Texture.hpp \
-	System.hpp \
-	Executives.hpp \
-	MemoryManager.hpp \
-	UniformBuffer.hpp \
-	SparkIncludeBase.hpp \
-	Image.hpp \
-	Buffer.hpp \
-	ImageView.hpp
+obj/ResourceSet.o: src/ResourceSet.cpp \
+	include/ResourceSet.hpp \
+	include/Texture.hpp \
+	include/System.hpp \
+	include/Executives.hpp \
+	include/MemoryManager.hpp \
+	include/UniformBuffer.hpp \
+	include/SparkIncludeBase.hpp \
+	include/Image.hpp \
+	include/Buffer.hpp \
+	include/ImageView.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/System.o: System.cpp \
-	System.hpp \
-	Executives.hpp \
-	SparkIncludeBase.hpp
+obj/System.o: src/System.cpp \
+	include/System.hpp \
+	include/Executives.hpp \
+	include/SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/Texture.o: Texture.cpp \
-	Texture.hpp \
-	System.hpp \
-	MemoryManager.hpp \
-	Executives.hpp \
-	SparkIncludeBase.hpp \
-	Image.hpp \
-	Buffer.hpp \
-	ImageView.hpp
+obj/Texture.o: src/Texture.cpp \
+	include/Texture.hpp \
+	include/System.hpp \
+	include/MemoryManager.hpp \
+	include/Executives.hpp \
+	include/SparkIncludeBase.hpp \
+	include/Image.hpp \
+	include/Buffer.hpp \
+	include/ImageView.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/UniformBuffer.o: UniformBuffer.cpp \
-	UniformBuffer.hpp \
-	System.hpp \
-	MemoryManager.hpp \
-	Executives.hpp \
-	Buffer.hpp \
-	SparkIncludeBase.hpp
+obj/UniformBuffer.o: src/UniformBuffer.cpp \
+	include/UniformBuffer.hpp \
+	include/System.hpp \
+	include/MemoryManager.hpp \
+	include/Executives.hpp \
+	include/Buffer.hpp \
+	include/SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 	
-obj/VertexBuffer.o: VertexBuffer.cpp \
-	VertexBuffer.hpp \
-	Executives.hpp \
-	System.hpp \
-	MemoryManager.hpp \
-	Buffer.hpp \
-	SparkIncludeBase.hpp
+obj/VertexBuffer.o: src/VertexBuffer.cpp \
+	include/VertexBuffer.hpp \
+	include/Executives.hpp \
+	include/System.hpp \
+	include/MemoryManager.hpp \
+	include/Buffer.hpp \
+	include/SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/Window.o: Window.cpp \
-	Window.hpp \
-	System.hpp \
-	ResourceSet.hpp  \
-	ShaderSet.hpp \
-	Buffer.hpp \
-	SparkIncludeBase.hpp
+obj/Window.o: src/Window.cpp \
+	include/Window.hpp \
+	include/System.hpp \
+	include/ResourceSet.hpp  \
+	include/ShaderSet.hpp \
+	include/Buffer.hpp \
+	include/SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/ShaderSet.o: ShaderSet.cpp \
-	ShaderSet.hpp \
-	System.hpp \
-	SparkIncludeBase.hpp
+obj/ShaderSet.o: src/ShaderSet.cpp \
+	include/ShaderSet.hpp \
+	include/System.hpp \
+	include/SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/Image.o: Image.cpp \
-	Image.hpp \
-	System.hpp \
-	Executives.hpp \
-	MemoryManager.hpp \
-	SparkIncludeBase.hpp
+obj/Image.o: src/Image.cpp \
+	include/Image.hpp \
+	include/System.hpp \
+	include/Executives.hpp \
+	include/MemoryManager.hpp \
+	include/SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/ImageView.o: ImageView.cpp \
-	ImageView.hpp \
-	System.hpp \
-	SparkIncludeBase.hpp
+obj/ImageView.o: src/ImageView.cpp \
+	include/ImageView.hpp \
+	include/System.hpp \
+	include/SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g
 
-obj/Buffer.o: Buffer.cpp \
-	Buffer.hpp \
-	System.hpp \
-	Executives.hpp \
-	MemoryManager.hpp \
-	SparkIncludeBase.hpp
+obj/Buffer.o: src/Buffer.cpp \
+	include/Buffer.hpp \
+	include/System.hpp \
+	include/Executives.hpp \
+	include/MemoryManager.hpp \
+	include/SparkIncludeBase.hpp
 	$(CC) -c $< -o $@ -g

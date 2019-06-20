@@ -1,4 +1,4 @@
-#include"Texture.hpp"
+#include"../include/Texture.hpp"
 
 namespace spk
 {

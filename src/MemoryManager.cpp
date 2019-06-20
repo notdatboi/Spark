@@ -1,5 +1,5 @@
-#include"MemoryManager.hpp"
-#include"System.hpp"
+#include"../include/MemoryManager.hpp"
+#include"../include/System.hpp"
 
 namespace spk
 {

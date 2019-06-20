@@ -1,5 +1,5 @@
-#include"Window.hpp"
-#include"System.hpp"
+#include"../include/Window.hpp"
+#include"../include/System.hpp"
 
 namespace spk
 {

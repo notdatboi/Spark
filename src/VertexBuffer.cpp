@@ -1,4 +1,4 @@
-#include"VertexBuffer.hpp"
+#include"../include/VertexBuffer.hpp"
 
 namespace spk
 {

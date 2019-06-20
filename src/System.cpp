@@ -1,6 +1,6 @@
-#include"System.hpp"
-#include"Executives.hpp"
-#include"MemoryManager.hpp"
+#include"../include/System.hpp"
+#include"../include/Executives.hpp"
+#include"../include/MemoryManager.hpp"
 
 namespace spk
 {
